@@ -30,7 +30,7 @@ const TileableCanvasMixin = (BaseClass = CustomCanvas) => {
     _cursor = new Cursor(this._el, { offset: {x: 8, y: 8 } });
 
     get tile() { return this._tile; }
-    set tile(tile) { return this._tile = tile; }
+    set tile(tile) { throw new Error('It\'s property read only!'); }
 
     [_onMouseDownHandler](event) {
       this._startDraw();
@@ -53,6 +53,7 @@ const TileableCanvasMixin = (BaseClass = CustomCanvas) => {
 
     _startDraw() {
       if (this.tile == null) return;
+
       this._drawState = true;
       if (event.button === 0) this._drawType = 1;
       if (event.button === 2) this._drawType = 0;
@@ -61,6 +62,7 @@ const TileableCanvasMixin = (BaseClass = CustomCanvas) => {
 
     _updateTilePlace(x, y) {
       if (this.tile == null) return;
+
       if (this._drawType === 1) {
         if (this._drawedTiles.get(`${y}|${x}`) === this.tile) return;
         this._drawedTiles.set(`${y}|${x}`, this.tile);
@@ -97,12 +99,12 @@ const TileableCanvasMixin = (BaseClass = CustomCanvas) => {
       this._ctx.restore();
     }
 
-    _render() {
+    _render(time, clearRender = false) {
       this._ctx.imageSmoothingEnabled = this._imageSmoothingEnabled;
       this.clear();
       this._drawTiles();
       this.dispatchEvent(buildEvent(':render', null, { ctx: this._ctx }));
-      this._drawGrid();
+      if (!clearRender) this._drawGrid();
     }
 
     _calcGrid() {
@@ -139,10 +141,49 @@ const TileableCanvasMixin = (BaseClass = CustomCanvas) => {
       await super.init();
     }
 
-    updateCurrentTile(tile) {
-      this.tile = tile;
-      this.cursor.updateImageFromBitmap(tile);
-      this.cursor.showCursor();
+    async updateCurrentTile(tile) {
+      this._tile = tile;
+      await this._cursor.updateImageFromBitmap(tile);
+      this._cursor.showCursor();
+    }
+
+    async save() {
+      const a = document.createElement("a");
+      a.style = "display: none";
+      document.body.appendChild(a);
+      
+      this._render(null, true);
+
+      const img = await new Promise((resolve) => this._el.toBlob(resolve, 'image/png'));
+      a.href = URL.createObjectURL(img);
+      a.download = 'tilemap.png';
+      a.click();
+      URL.revokeObjectURL(a.href);
+      
+      this._render();
+
+      const json = {};
+      
+      for (const [key, tile] of this._drawedTiles.entries()) {
+        json[key] = { };
+      }
+      const blob = new Blob([JSON.stringify(json)], { type: 'application/json' });
+      a.href = URL.createObjectURL(blob);
+      a.download = 'tilemap.json';
+      a.click();
+      URL.revokeObjectURL(a.href);
+
+      a.remove();
+    }
+
+    async load({ meta: tilesMeta, img }) {
+      const promises = [];
+      for (const [key, tileMeta] of Object.entries(tilesMeta)) {
+        const [y, x] = key.split('|');
+        promises.push(createImageBitmap(img, Number(x) *  this._tileSize.x, Number(y) *  this._tileSize.y, this._tileSize.x, this._tileSize.y)
+          .then((tile) => this._drawedTiles.set(key, tile)));
+      }
+      await Promise.all(promises);
     }
   }
 

@@ -49,7 +49,7 @@ export default class CustomCanvas extends EventTarget {
 
     await this._initListeners();
 
-    this._renderInNextFrame()
+    this._renderInNextFrame();
   }
 
   async _initListeners() {

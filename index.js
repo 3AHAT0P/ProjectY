@@ -15,17 +15,17 @@ const createButton = (to, label, onClick) => {
 };
 
 const main = async () => {
-  // const mainCanvas = await MainCanvas.create({ el: document.body, size: { width: 512, height: 512 } });
-  // const saveButton = createButton(document.body, 'Save', () => mainCanvas.save());
-  // const currentTileCanvas = await CustomCanvas.create({ el: document.body, size: { width: 64, height: 64 } });
-  // await MainTileSet.create({}, {
-  //   onSelect(tile) {
-  //     mainCanvas.updateCurrentTile(tile);
-  //     mainCanvas.dispatchEvent(new Event(':renderRequest'));
-  //     currentTileCanvas.addEventListener(':render', (event) => { if (tile != null) event.ctx.drawImage(tile, 0, 0, 64, 64); }, { once: true });
-  //     currentTileCanvas.dispatchEvent(new Event(':renderRequest'));
-  //   }
-  // });
+  const mainCanvas = await MainCanvas.create({ el: document.body, size: { width: 512, height: 512 } });
+  const saveButton = createButton(document.body, 'Save', () => mainCanvas.save());
+  const currentTileCanvas = await CustomCanvas.create({ el: document.body, size: { width: 64, height: 64 } });
+  await MainTileSet.create({}, {
+    onSelect(tile) {
+      mainCanvas.updateCurrentTile(tile);
+      mainCanvas.dispatchEvent(new Event(':renderRequest'));
+      currentTileCanvas.addEventListener(':render', (event) => { if (tile != null) event.ctx.drawImage(tile, 0, 0, 64, 64); }, { once: true });
+      currentTileCanvas.dispatchEvent(new Event(':renderRequest'));
+    }
+  });
 
   const tileMap = await MainTileMap.create({ el: document.body, size: { width: 512, height: 512 } });
 }

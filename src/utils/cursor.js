@@ -9,9 +9,9 @@ const updateImageColorVolume = (imageData) => {
     // all values are integers between 0 and 255
     // do with them whatever you like. Here we are reducing the color volume to 98%
     // without affecting the alpha channel
-    pixels[i] = pixels[i] * 0.98;
-    pixels[i+1] = pixels[i+1] * 0.98;
-    pixels[i+2] = pixels[i+2] * 0.98;
+    pixels[i] = pixels[i] * 0.95;
+    pixels[i+1] = pixels[i+1] * 0.85;
+    pixels[i+2] = pixels[i+2] * 0.85;
   }
   return imageData;
 }

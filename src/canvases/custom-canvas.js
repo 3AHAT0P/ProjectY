@@ -1,4 +1,5 @@
 import buildEvent from '/src/utils/build-event.js';
+import throttle from '/src/utils/throttle.js';
 
 /* 
   
@@ -39,7 +40,7 @@ export default class CustomCanvas extends EventTarget {
     this._el.height = options.size.height;
     this.el = options.el;
 
-    this._render = this._render.bind(this);
+    this._render = throttle(this._render.bind(this), 16);
     this._renderInNextFrame = this._renderInNextFrame.bind(this);
   }
 
@@ -54,6 +55,11 @@ export default class CustomCanvas extends EventTarget {
 
   async _initListeners() {
     this.addEventListener(':renderRequest', this._renderInNextFrame, { passive: true });
+  }
+
+  updateSize(width, height) {
+    this._el.width = width;
+    this._el.height = height;
   }
 
   clear(color = 'white') {

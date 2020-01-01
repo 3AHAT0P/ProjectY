@@ -14,7 +14,7 @@ const SelectableCanvasMixin = (BaseClass = CustomCanvas) => {
     _modKey = 'shiftKey';
   
     [_onClickHandler](event) {
-      if (event[this._modKey]) this.dispatchEvent(buildEvent(':select', null, { ctx: this._ctx, nativeEvent: event }));
+      if (event[this._modKey]) this.dispatchEvent(buildEvent(':_select', null, { ctx: this._ctx, nativeEvent: event }));
     }
 
     constructor(options = {}) {

@@ -25,7 +25,7 @@ export default class MineTileMap extends DrawableCanvas {
       this._imageSrc.onerror = reject;
       this._imageSrc.src = this._imageSrcLink;
     });
-
+    this.updateSize(this._imageSrc.width, this._imageSrc.height);
   }
 
   async _loadMetadata() {

@@ -10,9 +10,11 @@ const _onMouseMoveHandler = Symbol('_onMouseMoveHandler');
 const _onMouseUpHandler = Symbol('_onMouseUpHandler');
 const _onClickHandler = Symbol('_onClickHandler');
 
+const CLASS_NAME = Symbol.for('DrawableCanvas');
+
 const DrawableCanvasMixin = (BaseClass = CustomCanvas) => {
   if (!(BaseClass === CustomCanvas || CustomCanvas.isPrototypeOf(BaseClass))) throw new Error('BaseClass isn\'t prototype of CustomCanvas!');
-  if (!(BaseClass === TileableCanvas || TileableCanvas.isPrototypeOf(BaseClass))) BaseClass = TileableCanvasMixin(BaseClass);
+  if (!(Array.isArray(BaseClass._metaClassNames) && BaseClass._metaClassNames.includes(Symbol.for('TileableCanvas')))) BaseClass = TileableCanvasMixin(BaseClass);
 
   class DrawableCanvas extends BaseClass {
     _drawState = false;
@@ -122,6 +124,8 @@ const DrawableCanvasMixin = (BaseClass = CustomCanvas) => {
       await Promise.all(promises);
     }
   }
+
+  DrawableCanvas._metaClassNames = [...(BaseClass._metaClassNames || []), CLASS_NAME];
 
   return DrawableCanvas;
 };

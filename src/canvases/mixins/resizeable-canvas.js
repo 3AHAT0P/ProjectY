@@ -38,8 +38,8 @@ const ResizeableCanvasMixin = (BaseClass = CustomCanvas) => {
   
     _resize(multiplier) {
       this._sizeMultiplier *= multiplier;
-      this._el.width *= multiplier;
-      this._el.height *= multiplier;
+      this.updateSize(this._el.width * multiplier, this._el.height * multiplier);
+      if (super._resize) super._resize(multiplier);
     }
   
     constructor(options = {}) {

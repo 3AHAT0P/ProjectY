@@ -5,6 +5,8 @@ import CustomCanvas from '/src/canvases/custom-canvas.js';
 const _onMouseMoveHandler = Symbol('_onMouseMoveHandler');
 const _onMouseOutHandler = Symbol('_onMouseOutHandler');
 
+const CLASS_NAME = Symbol.for('TileableCanvas');
+
 const TileableCanvasMixin = (BaseClass = CustomCanvas) => {
   if (!(BaseClass === CustomCanvas || CustomCanvas.isPrototypeOf(BaseClass))) throw new Error('BaseClass isn\'t prototype of CustomCanvas!');
 
@@ -54,6 +56,7 @@ const TileableCanvasMixin = (BaseClass = CustomCanvas) => {
         if (!layer.has(`${y}|${x}`)) return;
         layer.delete(`${y}|${x}`);
       }
+      layer.isDirty = true;
     }
 
     _hoverTilePlace(x, y) {
@@ -68,18 +71,29 @@ const TileableCanvasMixin = (BaseClass = CustomCanvas) => {
     }
 
     _drawTiles() {
-      for (const [place, tile] of this._layers['-1'].entries()) {
+      this._drawLayer(this._layers['-1']);
+      this._drawLayer(this._layers['0']);
+      this._drawLayer(this._layers['1']);
+    }
+
+    _drawLayer(layer) {
+      for (const [place, tile] of layer.entries()) {
         const [y, x] = place.split('|');
-        this._ctx.drawImage(tile, Number(x) * this._tileSize.x, Number(y) * this._tileSize.y);
+        this._ctx.drawImage(tile, Number(x) * this._tileSize.x, Number(y) * this._tileSize.y, this._tileSize.x, this._tileSize.y);
       }
-      for (const [place, tile] of this._layers['0'].entries()) {
-        const [y, x] = place.split('|');
-        this._ctx.drawImage(tile, Number(x) * this._tileSize.x, Number(y) * this._tileSize.y);
-      }
-      for (const [place, tile] of this._layers['1'].entries()) {
-        const [y, x] = place.split('|');
-        this._ctx.drawImage(tile, Number(x) * this._tileSize.x, Number(y) * this._tileSize.y);
-      }
+
+      // @TODO Optimization
+      // if (layer.isDirty) {
+      //   layer.isDirty = false;
+      //   for (const [place, tile] of layer.entries()) {
+      //     const [y, x] = place.split('|');
+      //     layer.cache.drawImage(tile, Number(x) * this._tileSize.x, Number(y) * this._tileSize.y, this._tileSize.x, this._tileSize.y);
+      //   }
+      //   this._ctx.drawImage(layer.cache, 0, 0, this._el.width, this._el.height);
+      // } else {
+      //   // Render cache of the layer
+      //   this._ctx.drawImage(layer.cache, 0, 0, this._el.width, this._el.height);
+      // }
     }
 
     _drawGrid() {
@@ -126,7 +140,7 @@ const TileableCanvasMixin = (BaseClass = CustomCanvas) => {
       this._el.addEventListener('mouseout', this[_onMouseOutHandler], { passive: true });
     }
 
-    async _initHoverTile() {
+    async _prepareHoverTileMask() {
       const canvas = document.createElement('canvas');
       canvas.style['image-rendering'] = 'pixelated';
       canvas.width = this._tileSize.x;
@@ -150,11 +164,21 @@ const TileableCanvasMixin = (BaseClass = CustomCanvas) => {
     async init() {
       this._calcGrid();
 
-      await this._initHoverTile();
+      await this._prepareHoverTileMask();
 
       await super.init();
     }
+
+    _resize(multiplier) {
+      this._tileSize.x *= multiplier;
+      this._tileSize.y *= multiplier;
+      if (super._resize) super._resize(multiplier);
+      // this._calcGrid();
+      this._renderInNextFrame();
+    }
   }
+
+  TileableCanvas._metaClassNames = [...(BaseClass._metaClassNames || []), CLASS_NAME];
 
   return TileableCanvas;
 };

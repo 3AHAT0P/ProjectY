@@ -11,10 +11,16 @@ export default class MineTileMap extends SelectableCanvasMixin(ResizeableCanvasM
   _metadataSrcLink = 'content/tilesets/main-tile-set.json';
   _metadataSrc = null;
 
-  _onSelect({ nativeEvent: event }) {
-    const [x, y] = this._transformEventCoordsToGridCoords(event.layerX, event.layerY)
-    const tile = this._getTile(x, y);
-    this.dispatchEvent(buildEvent(':select', null, { tile }));
+  _onMultiSelect({ from, to }) {
+    const [xFrom, yFrom] = this._transformEventCoordsToGridCoords(from.layerX, from.layerY);
+    const [xTo, yTo] = this._transformEventCoordsToGridCoords(to.layerX, to.layerY);
+    const tiles = new Map();
+    for (let y = yFrom, _y = 0; y <= yTo; ++y, ++_y) {
+      for (let x = xFrom, _x = 0; x <= xTo; ++x, ++_x) {
+        tiles.set(`${_y}|${_x}`, this._getTile(x, y));
+      }
+    }
+    this.dispatchEvent(buildEvent(':multiSelect', null, { tiles }));
   }
 
   constructor(options = {}) {
@@ -39,7 +45,7 @@ export default class MineTileMap extends SelectableCanvasMixin(ResizeableCanvasM
 
   async _initListeners() {
     await super._initListeners();
-    this.addEventListener(':_select', this._onSelect, { passive: true });
+    this.addEventListener(':_multiSelect', this._onMultiSelect, { passive: true });
   }
 
   async _loadImage() {

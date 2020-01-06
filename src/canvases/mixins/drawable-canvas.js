@@ -8,9 +8,14 @@ const _onMouseLeaveHandler = Symbol('_onMouseLeaveHandler');
 const _onMouseDownHandler = Symbol('_onMouseDownHandler');
 const _onMouseMoveHandler = Symbol('_onMouseMoveHandler');
 const _onMouseUpHandler = Symbol('_onMouseUpHandler');
-const _onClickHandler = Symbol('_onClickHandler');
+const _onContextMenuHandler = Symbol('_onContextMenuHandler');
 
 const CLASS_NAME = Symbol.for('DrawableCanvas');
+
+const DRAW_STATE_ENAM = {
+  ERASE: 0,
+  DRAW: 1,
+};
 
 const DrawableCanvasMixin = (BaseClass = CustomCanvas) => {
   if (!(BaseClass === CustomCanvas || CustomCanvas.isPrototypeOf(BaseClass))) throw new Error('BaseClass isn\'t prototype of CustomCanvas!');
@@ -18,12 +23,15 @@ const DrawableCanvasMixin = (BaseClass = CustomCanvas) => {
 
   class DrawableCanvas extends BaseClass {
     _drawState = false;
-    _drawType = 1; // 0 - erase, 1 - draw
+    _drawType = DRAW_STATE_ENAM.DRAW;
 
     _cursor = new Cursor(this._el, { offset: {x: 8, y: 8 } });
 
     [_onMouseDownHandler](event) {
-      this._startDraw();
+      if (event.metaKey) return;
+      this._startDraw(event);
+      this._updateTilePlace(...this._transformEventCoordsToGridCoords(event.layerX, event.layerY));
+      this._renderInNextFrame();
     }
 
     [_onMouseMoveHandler](event) {
@@ -38,34 +46,38 @@ const DrawableCanvasMixin = (BaseClass = CustomCanvas) => {
       this._el.removeEventListener('mousemove', this[_onMouseMoveHandler]);
     }
 
-    [_onClickHandler](event) {
-      this._updateTilePlace(...this._transformEventCoordsToGridCoords(event.layerX, event.layerY));
-      this._renderInNextFrame();
+    [_onContextMenuHandler](event) {
+      if (!event.metaKey) event.preventDefault();
     }
 
-    _startDraw() {
-      if (this.tile == null) return;
+    _startDraw(event) {
+      if (this.tile == null && this.tiles == null) return;
 
       this._drawState = true;
-      if (event.button === 0) this._drawType = 1;
-      if (event.button === 2) this._drawType = 0;
+      if (event.button === 0) this._drawType = DRAW_STATE_ENAM.DRAW;
+      if (event.button === 2) this._drawType = DRAW_STATE_ENAM.ERASE;
       this._el.addEventListener('mousemove', this[_onMouseMoveHandler], { passive: true });
     }
 
     _updateTilePlace(x, y, z = '0') {
-      if (this.tile == null) return;
+      if (this.tile == null && this.tiles == null) return;
 
-      if (this._drawType === 1) {
-        this._updateTileByCoord(x, y, z, this.tile);
-      } else {
-        this._updateTileByCoord(x, y, z, null);
+      if (this._drawType === DRAW_STATE_ENAM.ERASE) this._updateTileByCoord(x, y, z, null);
+      else if (this._drawType === DRAW_STATE_ENAM.DRAW) {
+        if (this.tile != null) this._updateTileByCoord(x, y, z, this.tile);
+        else {
+          for (const [place, tile] of this._tiles.entries()) {
+            const [_y, _x] = place.split('|');
+            this._updateTileByCoord(x + Number(_x), y + Number(_y), z, tile);
+          }
+        }
       }
     }
   
     async _initListeners() {
       await super._initListeners();
   
-      this._el.addEventListener('click', this[_onClickHandler], { passive: true });
+      this._el.addEventListener('contextmenu', this[_onContextMenuHandler]);
       this._el.addEventListener('mousedown', this[_onMouseDownHandler], { passive: true });
       this._el.addEventListener('mouseup', this[_onMouseUpHandler], { passive: true });
     }
@@ -73,7 +85,7 @@ const DrawableCanvasMixin = (BaseClass = CustomCanvas) => {
     constructor(options = {}) {
       super(options);
 
-      this[_onClickHandler] = this[_onClickHandler].bind(this);
+      this[_onContextMenuHandler] = this[_onContextMenuHandler].bind(this);
       this[_onMouseDownHandler] = this[_onMouseDownHandler].bind(this);
       this[_onMouseMoveHandler] = this[_onMouseMoveHandler].bind(this);
       this[_onMouseUpHandler] = this[_onMouseUpHandler].bind(this);
@@ -81,8 +93,16 @@ const DrawableCanvasMixin = (BaseClass = CustomCanvas) => {
 
     async updateCurrentTile(tile) {
       this._tile = tile;
+      this._tiles = null;
       await this._cursor.updateImageFromBitmap(tile);
       this._cursor.showCursor();
+    }
+
+    async updateCurrentTiles(tiles) {
+      this._tile = null;
+      this._tiles = tiles;
+      // await this._cursor.updateImageFromBitmap(tile);
+      // this._cursor.showCursor();
     }
 
     async save() {

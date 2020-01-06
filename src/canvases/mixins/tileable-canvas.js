@@ -12,6 +12,7 @@ const TileableCanvasMixin = (BaseClass = CustomCanvas) => {
 
   class TileableCanvas extends BaseClass {
     _tile = null;
+    _tiles = null;
     _hoverTile = null;
     _tileSize = {
       x: 16,
@@ -30,6 +31,9 @@ const TileableCanvasMixin = (BaseClass = CustomCanvas) => {
     // current
     get tile() { return this._tile; }
     set tile(tile) { throw new Error('It\'s property read only!'); }
+    // current
+    get tiles() { return this._tiles; }
+    set tiles(tiles) { throw new Error('It\'s property read only!'); }
 
     [_onMouseMoveHandler](event) {
       this._hoverTilePlace(...this._transformEventCoordsToGridCoords(event.layerX, event.layerY));

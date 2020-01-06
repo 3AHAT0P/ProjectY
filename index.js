@@ -28,6 +28,31 @@ const main = async () => {
     currentTileCanvas.dispatchEvent(new Event(':renderRequest'));
   });
 
+  mainTileSet.addEventListener(':multiSelect', ({ tiles }) => {
+    mainCanvas.updateCurrentTiles(tiles);
+    mainCanvas.dispatchEvent(new Event(':renderRequest'));
+    if (tiles != null) {
+      currentTileCanvas.addEventListener(':render', (event) => {
+        const width = 64;
+        const height = 64;
+        let maxX = 0;
+        let maxY = 0;
+        for (const [place, tile] of tiles.entries()) {
+          const [y, x] = place.split('|');
+          if (Number(y) > maxY) maxY = Number(y);
+          if (Number(x) > maxX) maxX = Number(x);
+        }
+        const tileWidth = width / (maxX + 1);
+        const tileHeight = height / (maxX + 1);
+        for (const [place, tile] of tiles.entries()) {
+          const [y, x] = place.split('|');
+          event.ctx.drawImage(tile, Number(x) * tileWidth, Number(y) * tileHeight, tileWidth, tileHeight);
+        }
+      }, { once: true });
+      currentTileCanvas.dispatchEvent(new Event(':renderRequest'));
+    }
+  });
+
   const tileMap = await MainTileMap.create({ el: document.body, size: { width: 512, height: 512 } });
 }
 

@@ -1,7 +1,8 @@
 import buildEvent from '/src/utils/build-event.js';
 import CustomCanvas from '/src/canvases/custom-canvas.js';
 
-const _onClickHandler = Symbol('_onClickHandler');
+const _onMouseDownHandler = Symbol('_onMouseDownHandler');
+const _onMouseUpHandler = Symbol('_onMouseUpHandler');
 
 /* 
   
@@ -12,9 +13,45 @@ const SelectableCanvasMixin = (BaseClass = CustomCanvas) => {
   class SelectableCanvas extends BaseClass {
 
     _modKey = 'shiftKey';
-  
-    [_onClickHandler](event) {
-      if (event[this._modKey]) this.dispatchEvent(buildEvent(':_select', null, { ctx: this._ctx, nativeEvent: event }));
+
+    _eventDown = null;
+
+    [_onMouseDownHandler](event) {
+      if (event[this._modKey]) this._eventDown = event; 
+    }
+
+    [_onMouseUpHandler](event) {
+      if (event[this._modKey]) {
+        const options = {
+          ctx: this._ctx,
+          eventDown: this._eventDown,
+          eventUp: event,
+          from: {
+            layerX: 0,
+            layerY:0
+          },
+          to: {
+            layerX: 0,
+            layerY:0
+          }
+        };
+        if (this._eventDown.layerX > event.layerX) {
+          options.from.layerX = event.layerX;
+          options.to.layerX = this._eventDown.layerX;
+        } else {
+          options.to.layerX = event.layerX;
+          options.from.layerX = this._eventDown.layerX;
+        }
+        if (this._eventDown.layerY > event.layerY) {
+          options.from.layerY = event.layerY;
+          options.to.layerY = this._eventDown.layerY;
+        } else {
+          options.to.layerY = event.layerY;
+          options.from.layerY = this._eventDown.layerY;
+        }
+        this._eventDown = null;
+        this.dispatchEvent(buildEvent(':_multiSelect', null, options));
+      }
     }
 
     constructor(options = {}) {
@@ -22,13 +59,15 @@ const SelectableCanvasMixin = (BaseClass = CustomCanvas) => {
 
       if (options._modKey != null) this._modKey = options._modKey;
   
-      this[_onClickHandler] = this[_onClickHandler].bind(this);
+      this[_onMouseDownHandler] = this[_onMouseDownHandler].bind(this);
+      this[_onMouseUpHandler] = this[_onMouseUpHandler].bind(this);
     }
   
     async _initListeners() {
       await super._initListeners();
   
-      this._el.addEventListener('click', this[_onClickHandler], { passive: true });
+      this._el.addEventListener('mousedown', this[_onMouseDownHandler], { passive: true });
+      this._el.addEventListener('mouseup', this[_onMouseUpHandler], { passive: true });
     }
   }
 

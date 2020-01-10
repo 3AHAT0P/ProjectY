@@ -1,7 +1,7 @@
-import { TileableCanvas } from '/src/canvases/mixins/tileable-canvas.js';
-import SelectableCanvasMixin from '/src/canvases/mixins/selectable-canvas.js';
-import ResizeableCanvasMixin from '/src/canvases/mixins/resizeable-canvas.js';
-import buildEvent from '/src/utils/build-event.js';
+import { TileableCanvas } from '../../src/canvases/mixins/tileable-canvas.js';
+import SelectableCanvasMixin from '../../src/canvases/mixins/selectable-canvas.js';
+import ResizeableCanvasMixin from '../../src/canvases/mixins/resizeable-canvas.js';
+import buildEvent from '../../src/utils/build-event.js';
 
 export default class MineTileMap extends SelectableCanvasMixin(ResizeableCanvasMixin(TileableCanvas)) {
 

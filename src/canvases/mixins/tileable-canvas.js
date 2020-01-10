@@ -1,6 +1,6 @@
-import buildEvent from '/src/utils/build-event.js';
-import Cursor from '/src/utils/cursor.js';
-import CustomCanvas from '/src/canvases/custom-canvas.js';
+import buildEvent from '../../utils/build-event.js';
+import Cursor from '../../utils/cursor.js';
+import CustomCanvas from '../../canvases/custom-canvas.js';
 
 const _onMouseMoveHandler = Symbol('_onMouseMoveHandler');
 const _onMouseOutHandler = Symbol('_onMouseOutHandler');

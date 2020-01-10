@@ -1,5 +1,5 @@
-import buildEvent from '/src/utils/build-event.js';
-import throttle from '/src/utils/throttle.js';
+import buildEvent from '../utils/build-event.js';
+import throttle from '../utils/throttle.js';
 
 /* 
   

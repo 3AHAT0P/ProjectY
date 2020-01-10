@@ -1,7 +1,7 @@
-import buildEvent from '/src/utils/build-event.js';
-import Cursor from '/src/utils/cursor.js';
-import CustomCanvas from '/src/canvases/custom-canvas.js';
-import TileableCanvasMixin, { TileableCanvas } from '/src/canvases/mixins/tileable-canvas.js';
+import buildEvent from '../../utils/build-event.js';
+import Cursor from '../../utils/cursor.js';
+import CustomCanvas from '../../canvases/custom-canvas.js';
+import TileableCanvasMixin, { TileableCanvas } from '../../canvases/mixins/tileable-canvas.js';
 
 const _onMouseEnterHandler = Symbol('_onMouseEnterHandler');
 const _onMouseLeaveHandler = Symbol('_onMouseLeaveHandler');
@@ -101,8 +101,8 @@ const DrawableCanvasMixin = (BaseClass = CustomCanvas) => {
     async updateCurrentTiles(tiles) {
       this._tile = null;
       this._tiles = tiles;
-      // await this._cursor.updateImageFromBitmap(tile);
-      // this._cursor.showCursor();
+      await this._cursor.updateImageFromBitmap(tiles);
+      this._cursor.showCursor();
     }
 
     async save() {

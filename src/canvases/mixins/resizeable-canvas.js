@@ -1,4 +1,4 @@
-import CustomCanvas from '/src/canvases/custom-canvas.js';
+import CustomCanvas from '../../canvases/custom-canvas.js';
 
 const INCREASE_SIZE_MULTIPLIER = 2;
 const DECREASE_SIZE_MULTIPLIER = 1 / 2;

@@ -123,7 +123,7 @@ const DrawableCanvasMixin = (BaseClass = CustomCanvas) => {
 
       const json = {};
       
-      for (const [key, tile] of this._layers['0'].entries()) {
+      for (const [key, tile] of this._layers[ZERO_LAYER].entries()) {
         json[key] = { };
       }
       const blob = new Blob([JSON.stringify(json)], { type: 'application/json' });

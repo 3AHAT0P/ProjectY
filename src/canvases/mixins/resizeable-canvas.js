@@ -10,7 +10,9 @@ const _onContextMenuHandler = Symbol('_onContextMenuHandler');
   
  */
 const ResizeableCanvasMixin = (BaseClass = CustomCanvas) => {
-  if (!(BaseClass === CustomCanvas || CustomCanvas.isPrototypeOf(BaseClass))) throw new Error('BaseClass isn\'t prototype of CustomCanvas!');
+  if (!(BaseClass === CustomCanvas || CustomCanvas.isPrototypeOf(BaseClass))) {
+    throw new Error('BaseClass isn\'t prototype of CustomCanvas!');
+  }
   
   class ResizeableCanvas extends BaseClass {
 
@@ -39,7 +41,7 @@ const ResizeableCanvasMixin = (BaseClass = CustomCanvas) => {
     _resize(multiplier) {
       this._sizeMultiplier *= multiplier;
       this.updateSize(this._el.width * multiplier, this._el.height * multiplier);
-      if (super._resize) super._resize(multiplier);
+      if (super._resize instanceof Function) super._resize(multiplier);
     }
   
     constructor(options = {}) {

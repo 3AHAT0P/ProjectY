@@ -8,12 +8,12 @@ const _onMouseUpHandler = Symbol('_onMouseUpHandler');
   
  */
 const SelectableCanvasMixin = (BaseClass = CustomCanvas) => {
-  if (!(BaseClass === CustomCanvas || CustomCanvas.isPrototypeOf(BaseClass))) throw new Error('BaseClass isn\'t prototype of CustomCanvas!');
+  if (!(BaseClass === CustomCanvas || CustomCanvas.isPrototypeOf(BaseClass))) {
+    throw new Error('BaseClass isn\'t prototype of CustomCanvas!');
+  }
   
   class SelectableCanvas extends BaseClass {
-
     _modKey = 'shiftKey';
-
     _eventDown = null;
 
     [_onMouseDownHandler](event) {
@@ -27,27 +27,27 @@ const SelectableCanvasMixin = (BaseClass = CustomCanvas) => {
           eventDown: this._eventDown,
           eventUp: event,
           from: {
-            layerX: 0,
-            layerY:0
+            offsetX: 0,
+            offsetY:0
           },
           to: {
-            layerX: 0,
-            layerY:0
+            offsetX: 0,
+            offsetY:0
           }
         };
-        if (this._eventDown.layerX > event.layerX) {
-          options.from.layerX = event.layerX;
-          options.to.layerX = this._eventDown.layerX;
+        if (this._eventDown.offsetX > event.offsetX) {
+          options.from.offsetX = event.offsetX;
+          options.to.offsetX = this._eventDown.offsetX;
         } else {
-          options.to.layerX = event.layerX;
-          options.from.layerX = this._eventDown.layerX;
+          options.to.offsetX = event.offsetX;
+          options.from.offsetX = this._eventDown.offsetX;
         }
-        if (this._eventDown.layerY > event.layerY) {
-          options.from.layerY = event.layerY;
-          options.to.layerY = this._eventDown.layerY;
+        if (this._eventDown.offsetY > event.offsetY) {
+          options.from.offsetY = event.offsetY;
+          options.to.offsetY = this._eventDown.offsetY;
         } else {
-          options.to.layerY = event.layerY;
-          options.from.layerY = this._eventDown.layerY;
+          options.to.offsetY = event.offsetY;
+          options.from.offsetY = this._eventDown.offsetY;
         }
         this._eventDown = null;
         this.dispatchEvent(buildEvent(':_multiSelect', null, options));

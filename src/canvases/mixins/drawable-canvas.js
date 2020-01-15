@@ -101,9 +101,8 @@ const DrawableCanvasMixin = (BaseClass = CustomCanvas) => {
     async updateCurrentTiles(tiles) {
       super.updateCurrentTiles(tiles);
       
-        await this._cursor.updateImageFromBitmap(tiles);
-        this._cursor.showCursor();
-      
+      await this._cursor.updateImageFromBitmap(tiles);
+      this._cursor.showCursor();
     }
 
     async save() {
@@ -121,11 +120,21 @@ const DrawableCanvasMixin = (BaseClass = CustomCanvas) => {
       
       this._render();
 
-      const json = {};
+      const json = {
+        tileHash: {},
+        tileMapSize: {
+          width: this.width,
+          height: this.height,
+        }
+      };
       
       for (const [key, tile] of this._layers[ZERO_LAYER].entries()) {
-        json[key] = { };
+        json.tileHash[key] = {
+          sourceSrc: tile.sourceSrc,
+          sourceCoords: tile.sourceCoords,
+        };
       }
+      
       const blob = new Blob([JSON.stringify(json)], { type: 'application/json' });
       a.href = URL.createObjectURL(blob);
       a.download = 'tilemap.json';
@@ -138,10 +147,15 @@ const DrawableCanvasMixin = (BaseClass = CustomCanvas) => {
     async load({ meta: tilesMeta, img }) {
       const promises = [];
       for (const [key, tileMeta] of Object.entries(tilesMeta)) {
-        const [y, x] = Point.fromString(key).toArray();
+        const sx = tileMeta.sourceCoords.x * this._tileSize.x;
+        const sy = tileMeta.sourceCoords.y * this._tileSize.y;
+        
         promises.push(
-          createImageBitmap(img, x * this._tileSize.x, y * this._tileSize.y, this._tileSize.x, this._tileSize.y)
-            .then((tile) => this._layers[ZERO_LAYER].set(key, tile)),
+          createImageBitmap(img, sx, sy, this._tileSize.x, this._tileSize.y)
+            .then((tile) => this._layers[ZERO_LAYER].set(key, {
+              ...tileMeta,
+              bitmap: tile,
+            })),
         );
       }
       await Promise.all(promises);

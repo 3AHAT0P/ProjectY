@@ -11,6 +11,6 @@ export default function (tiles, ctx, width = 64, height = 64, contain) {
   
   for (const [place, tile] of tiles.entries()) {
     const [y, x] = place.split('|');
-    ctx.drawImage(tile, Number(x) * tileWidth, Number(y) * tileHeight, tileWidth, tileHeight);
+    ctx.drawImage(tile.bitmap, Number(x) * tileWidth, Number(y) * tileHeight, tileWidth, tileHeight);
   }
 }

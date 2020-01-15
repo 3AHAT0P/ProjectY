@@ -85,15 +85,19 @@ const TileableCanvasMixin = (BaseClass = CustomCanvas) => {
     }
 
     _drawLayer(layer) {
-      for (const [place, tile] of layer.entries()) {
-        const [y, x] = Point.fromString(place).toArray();
-        this._ctx.drawImage(
-          tile,
-          x * this._tileSize.x,
-          y * this._tileSize.y,
-          this._tileSize.x,
-          this._tileSize.y,
-        );
+      try {
+        for (const [place, tile] of layer.entries()) {
+          const [y, x] = Point.fromString(place).toArray();
+          this._ctx.drawImage(
+            tile.bitmap,
+            x * this._tileSize.x,
+            y * this._tileSize.y,
+            this._tileSize.x,
+            this._tileSize.y,
+          );
+        }
+      } catch (e) {
+        console.error('tileable-canvas::_drawLayer', e);
       }
 
       // @TODO Optimization
@@ -162,7 +166,7 @@ const TileableCanvasMixin = (BaseClass = CustomCanvas) => {
       const ctx = canvas.getContext('2d');
       ctx.fillStyle = 'hsla(0, 0%, 0%, .1)';
       ctx.fillRect(0, 0, this._tileSize.x, this._tileSize.y);
-      this._hoverTile = await createImageBitmap(canvas, 0, 0, this._tileSize.x, this._tileSize.y);
+      this._hoverTile = { bitmap: await createImageBitmap(canvas, 0, 0, this._tileSize.x, this._tileSize.y) };
     }
   
     _resize(multiplier) {

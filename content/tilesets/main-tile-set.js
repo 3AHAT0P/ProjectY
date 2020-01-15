@@ -64,12 +64,19 @@ export default class MineTileMap extends SelectableCanvasMixin(ResizeableCanvasM
         const x = col * this._tileSize.x;
         promises.push(
           createImageBitmap(this._imageSrc, x, y, this._tileSize.x, this._tileSize.y)
-            .then((tile) => this._updateTileByCoord(col, row, '0', tile)),
+            .then((tile) => this._updateTileByCoord(col, row, '0', {
+              bitmap: tile,
+              sourceSrc: this._imageSrcLink,
+              sourceCoords: { x: col, y: row },
+            })),
         );
       }
     }
+    
+    await Promise.all(promises);
   }
 
+  //TODO need to check if it needed. We have such method in tile-map.js
   async _loadMetadata() {
     this._metadataSrc = await (await fetch(this._metadataSrcLink)).json();
   }

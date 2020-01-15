@@ -1,10 +1,9 @@
-import { TileableCanvas } from '/src/canvases/mixins/tileable-canvas.js';
-import SelectableCanvasMixin from '/src/canvases/mixins/selectable-canvas.js';
-import ResizeableCanvasMixin from '/src/canvases/mixins/resizeable-canvas.js';
-import buildEvent from '/src/utils/build-event.js';
+import { TileableCanvas } from '../../src/canvases/mixins/tileable-canvas.js';
+import SelectableCanvasMixin from '../../src/canvases/mixins/selectable-canvas.js';
+import ResizeableCanvasMixin from '../../src/canvases/mixins/resizeable-canvas.js';
+import buildEvent from '../../src/utils/build-event.js';
 
 export default class MineTileMap extends SelectableCanvasMixin(ResizeableCanvasMixin(TileableCanvas)) {
-
   _imageSrcLink = 'content/tilesets/main-tile-set.png';
   _imageSrc = null;
 
@@ -12,8 +11,8 @@ export default class MineTileMap extends SelectableCanvasMixin(ResizeableCanvasM
   _metadataSrc = null;
 
   _onMultiSelect({ from, to }) {
-    const [xFrom, yFrom] = this._transformEventCoordsToGridCoords(from.layerX, from.layerY);
-    const [xTo, yTo] = this._transformEventCoordsToGridCoords(to.layerX, to.layerY);
+    const [xFrom, yFrom] = this._transformEventCoordsToGridCoords(from.offsetX, from.offsetY);
+    const [xTo, yTo] = this._transformEventCoordsToGridCoords(to.offsetX, to.offsetY);
     const tiles = new Map();
     for (let y = yFrom, _y = 0; y <= yTo; ++y, ++_y) {
       for (let x = xFrom, _x = 0; x <= xTo; ++x, ++_x) {
@@ -24,11 +23,10 @@ export default class MineTileMap extends SelectableCanvasMixin(ResizeableCanvasM
   }
 
   constructor(options = {}) {
-    options.size = {
-      width: 0,
-      height: 0,
-    };
-    super(options);
+    super(Object.assign({}, options, { size: { width: 0, height: 0 } }));
+  
+    this._imageSrcLink = options.imageUrl || this._imageSrcLink;
+    this._metadataSrcLink = options.metadataUrl || this._metadataSrcLink;
   }
 
   async init() {
@@ -59,15 +57,26 @@ export default class MineTileMap extends SelectableCanvasMixin(ResizeableCanvasM
   }
 
   async _parse() {
-    for (let row = 0; row < this._rowsNumber; row++) {
+    const promises = [];
+    for (let row = 0; row < this._rowsNumber; row += 1) {
       const y = row * this._tileSize.y;
-      for (let col = 0; col < this._columnsNumber; col++) {
+      for (let col = 0; col < this._columnsNumber; col += 1) {
         const x = col * this._tileSize.x;
-        this._updateTileByCoord(col, row, '0', await createImageBitmap(this._imageSrc, x, y, this._tileSize.x, this._tileSize.y));
+        promises.push(
+          createImageBitmap(this._imageSrc, x, y, this._tileSize.x, this._tileSize.y)
+            .then((tile) => this._updateTileByCoord(col, row, '0', {
+              bitmap: tile,
+              sourceSrc: this._imageSrcLink,
+              sourceCoords: { x: col, y: row },
+            })),
+        );
       }
     }
+    
+    await Promise.all(promises);
   }
 
+  //TODO need to check if it needed. We have such method in tile-map.js
   async _loadMetadata() {
     this._metadataSrc = await (await fetch(this._metadataSrcLink)).json();
   }

@@ -1,3 +1,5 @@
+import drawImageFromMap from './drawImageFromMap.js';
+import getTilesRectSizes from './getTilesRectSizes.js';
 
 const updateImageColorVolume = (imageData) => {
   let pixels = imageData.data;
@@ -34,19 +36,23 @@ export default class Cursor {
     if (options.offset != null) this._offset = options.offset;
   }
 
-  async updateImageFromBitmap(bitmap) {
+  async updateImageFromBitmap(tiles) {
     const canvas = document.createElement('canvas');
     canvas.style['image-rendering'] = 'pixelated';
-    canvas.width = bitmap.width;
-    canvas.height = bitmap.height;
+    const { xCount, yCount } = getTilesRectSizes(tiles);
+    
+    canvas.width = 16 * xCount > 128 ? 128 : 16 * xCount;
+    canvas.height = 16 * yCount > 128 ? 128 : 16 * yCount;
+    
     const ctx = canvas.getContext('2d');
-    ctx.drawImage(bitmap, 0, 0, bitmap.width, bitmap.height);
+    ctx.imageSmoothingEnabled = false;
+    drawImageFromMap(tiles, ctx, canvas.width, canvas.height);
     
     // When we use image from canvas as a cursor, image brightness and color volume is increased. So we need decrease it before set as the cursor
-    let imageData = ctx.getImageData(0, 0, bitmap.width, bitmap.height);
+    let imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
     imageData = updateImageColorVolume(imageData);
     ctx.putImageData(imageData, 0, 0);
-    const data = await new Promise((resolve) => canvas.toBlob(resolve));
+    const data = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png', 1));
     this._url = URL.createObjectURL(data);
 
     // this._url = canvas.toDataURL();

@@ -1,7 +1,13 @@
-import buildEvent from '/src/utils/build-event.js';
-import Cursor from '/src/utils/cursor.js';
-import CustomCanvas from '/src/canvases/custom-canvas.js';
-import TileableCanvasMixin, { TileableCanvas } from '/src/canvases/mixins/tileable-canvas.js';
+import buildEvent from '../../utils/build-event.js';
+import Cursor from '../../utils/cursor.js';
+import Point from '../../utils/point.js';
+import CustomCanvas from '../../canvases/custom-canvas.js';
+import TileableCanvasMixin, {
+  TileableCanvas,
+  BACKGROUND_LAYER,
+  ZERO_LAYER,
+  FOREGROUND_LAYER,
+} from '../../canvases/mixins/tileable-canvas.js';
 
 const _onMouseEnterHandler = Symbol('_onMouseEnterHandler');
 const _onMouseLeaveHandler = Symbol('_onMouseLeaveHandler');
@@ -18,8 +24,12 @@ const DRAW_STATE_ENAM = {
 };
 
 const DrawableCanvasMixin = (BaseClass = CustomCanvas) => {
-  if (!(BaseClass === CustomCanvas || CustomCanvas.isPrototypeOf(BaseClass))) throw new Error('BaseClass isn\'t prototype of CustomCanvas!');
-  if (!(Array.isArray(BaseClass._metaClassNames) && BaseClass._metaClassNames.includes(Symbol.for('TileableCanvas')))) BaseClass = TileableCanvasMixin(BaseClass);
+  if (!(BaseClass === CustomCanvas || CustomCanvas.isPrototypeOf(BaseClass))) {
+    throw new Error('BaseClass isn\'t prototype of CustomCanvas!');
+  }
+  if (!(Array.isArray(BaseClass._metaClassNames) && BaseClass._metaClassNames.includes(Symbol.for('TileableCanvas')))) {
+    BaseClass = TileableCanvasMixin(BaseClass);
+  }
 
   class DrawableCanvas extends BaseClass {
     _drawState = false;
@@ -28,15 +38,15 @@ const DrawableCanvasMixin = (BaseClass = CustomCanvas) => {
     _cursor = new Cursor(this._el, { offset: {x: 8, y: 8 } });
 
     [_onMouseDownHandler](event) {
-      if (event.metaKey) return;
+      if (event.metaKey || event.ctrlKey) return;
       this._startDraw(event);
-      this._updateTilePlace(...this._transformEventCoordsToGridCoords(event.layerX, event.layerY));
+      this._updateTilePlace(...this._transformEventCoordsToGridCoords(event.offsetX, event.offsetY));
       this._renderInNextFrame();
     }
 
     [_onMouseMoveHandler](event) {
       if (this._drawState) {
-        this._updateTilePlace(...this._transformEventCoordsToGridCoords(event.layerX, event.layerY));
+        this._updateTilePlace(...this._transformEventCoordsToGridCoords(event.offsetX, event.offsetY));
         this._renderInNextFrame();
       }
     }
@@ -51,7 +61,7 @@ const DrawableCanvasMixin = (BaseClass = CustomCanvas) => {
     }
 
     _startDraw(event) {
-      if (this.tile == null && this.tiles == null) return;
+      if (this.tiles == null) return;
 
       this._drawState = true;
       if (event.button === 0) this._drawType = DRAW_STATE_ENAM.DRAW;
@@ -59,17 +69,14 @@ const DrawableCanvasMixin = (BaseClass = CustomCanvas) => {
       this._el.addEventListener('mousemove', this[_onMouseMoveHandler], { passive: true });
     }
 
-    _updateTilePlace(x, y, z = '0') {
-      if (this.tile == null && this.tiles == null) return;
-
+    _updateTilePlace(x, y, z = ZERO_LAYER) {
+      if (this.tiles == null) return;
+  
       if (this._drawType === DRAW_STATE_ENAM.ERASE) this._updateTileByCoord(x, y, z, null);
       else if (this._drawType === DRAW_STATE_ENAM.DRAW) {
-        if (this.tile != null) this._updateTileByCoord(x, y, z, this.tile);
-        else {
-          for (const [place, tile] of this._tiles.entries()) {
-            const [_y, _x] = place.split('|');
-            this._updateTileByCoord(x + Number(_x), y + Number(_y), z, tile);
-          }
+        for (const [place, tile] of this.tiles.entries()) {
+          const [_y, _x] = Point.fromString(place).toArray();
+          this._updateTileByCoord(x + _x, y + _y, z, tile);
         }
       }
     }
@@ -91,55 +98,51 @@ const DrawableCanvasMixin = (BaseClass = CustomCanvas) => {
       this[_onMouseUpHandler] = this[_onMouseUpHandler].bind(this);
     }
 
-    async updateCurrentTile(tile) {
-      this._tile = tile;
-      this._tiles = null;
-      await this._cursor.updateImageFromBitmap(tile);
+    async updateCurrentTiles(tiles) {
+      super.updateCurrentTiles(tiles);
+      
+      await this._cursor.updateImageFromBitmap(tiles);
       this._cursor.showCursor();
     }
 
-    async updateCurrentTiles(tiles) {
-      this._tile = null;
-      this._tiles = tiles;
-      // await this._cursor.updateImageFromBitmap(tile);
-      // this._cursor.showCursor();
-    }
-
     async save() {
-      const a = document.createElement("a");
-      a.style = "display: none";
-      document.body.appendChild(a);
-      
       this._render(null, true);
 
       const img = await new Promise((resolve) => this._el.toBlob(resolve, 'image/png'));
-      a.href = URL.createObjectURL(img);
-      a.download = 'tilemap.png';
-      a.click();
-      URL.revokeObjectURL(a.href);
       
       this._render();
 
-      const json = {};
+      const json = {
+        tileHash: {},
+        tileMapSize: {
+          width: this.width,
+          height: this.height,
+        }
+      };
       
-      for (const [key, tile] of this._layers['0'].entries()) {
-        json[key] = { };
+      for (const [key, tile] of this._layers[ZERO_LAYER].entries()) {
+        json.tileHash[key] = {
+          sourceSrc: tile.sourceSrc,
+          sourceCoords: tile.sourceCoords,
+        };
       }
-      const blob = new Blob([JSON.stringify(json)], { type: 'application/json' });
-      a.href = URL.createObjectURL(blob);
-      a.download = 'tilemap.json';
-      a.click();
-      URL.revokeObjectURL(a.href);
-
-      a.remove();
+      
+      return { img, meta: json };
     }
 
     async load({ meta: tilesMeta, img }) {
       const promises = [];
       for (const [key, tileMeta] of Object.entries(tilesMeta)) {
-        const [y, x] = key.split('|');
-        promises.push(createImageBitmap(img, Number(x) *  this._tileSize.x, Number(y) *  this._tileSize.y, this._tileSize.x, this._tileSize.y)
-          .then((tile) => this._layers['0'].set(key, tile)));
+        const sx = tileMeta.sourceCoords.x * this._tileSize.x;
+        const sy = tileMeta.sourceCoords.y * this._tileSize.y;
+        
+        promises.push(
+          createImageBitmap(img, sx, sy, this._tileSize.x, this._tileSize.y)
+            .then((tile) => this._layers[ZERO_LAYER].set(key, {
+              ...tileMeta,
+              bitmap: tile,
+            })),
+        );
       }
       await Promise.all(promises);
     }

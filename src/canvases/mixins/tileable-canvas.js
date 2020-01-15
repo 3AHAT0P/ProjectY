@@ -1,17 +1,22 @@
-import buildEvent from '/src/utils/build-event.js';
-import Cursor from '/src/utils/cursor.js';
-import CustomCanvas from '/src/canvases/custom-canvas.js';
+import buildEvent from '../../utils/build-event.js';
+import CustomCanvas from '../../canvases/custom-canvas.js';
+import Point from '../../utils/point.js';
 
 const _onMouseMoveHandler = Symbol('_onMouseMoveHandler');
 const _onMouseOutHandler = Symbol('_onMouseOutHandler');
 
 const CLASS_NAME = Symbol.for('TileableCanvas');
 
+export const BACKGROUND_LAYER = '-1';
+export const ZERO_LAYER = '0';
+export const FOREGROUND_LAYER = '1';
+
 const TileableCanvasMixin = (BaseClass = CustomCanvas) => {
-  if (!(BaseClass === CustomCanvas || CustomCanvas.isPrototypeOf(BaseClass))) throw new Error('BaseClass isn\'t prototype of CustomCanvas!');
+  if (!(BaseClass === CustomCanvas || CustomCanvas.isPrototypeOf(BaseClass))) {
+    throw new Error('BaseClass isn\'t prototype of CustomCanvas!');
+  }
 
   class TileableCanvas extends BaseClass {
-    _tile = null;
     _tiles = null;
     _hoverTile = null;
     _tileSize = {
@@ -20,23 +25,20 @@ const TileableCanvasMixin = (BaseClass = CustomCanvas) => {
     };
 
     _layers = {
-      '-1': new Map(),
-      '0': new Map(),
-      '1': new Map(),
+      [BACKGROUND_LAYER]: new Map(),
+      [ZERO_LAYER]: new Map(),
+      [FOREGROUND_LAYER]: new Map(),
     };
 
     _columnsNumber = 0;
     _rowsNumber = 0;
 
     // current
-    get tile() { return this._tile; }
-    set tile(tile) { throw new Error('It\'s property read only!'); }
-    // current
     get tiles() { return this._tiles; }
     set tiles(tiles) { throw new Error('It\'s property read only!'); }
 
     [_onMouseMoveHandler](event) {
-      this._hoverTilePlace(...this._transformEventCoordsToGridCoords(event.layerX, event.layerY));
+      this._hoverTilePlace(...this._transformEventCoordsToGridCoords(event.offsetX, event.offsetY));
       this._renderInNextFrame();
     }
 
@@ -50,7 +52,7 @@ const TileableCanvasMixin = (BaseClass = CustomCanvas) => {
       return layer.get(`${y}|${x}`);
     }
 
-    _updateTileByCoord(x, y, z = '0', tile) {
+    _updateTileByCoord(x, y, z = ZERO_LAYER, tile) {
       const layer = this._layers[z];
 
       if (tile != null) {
@@ -60,30 +62,42 @@ const TileableCanvasMixin = (BaseClass = CustomCanvas) => {
         if (!layer.has(`${y}|${x}`)) return;
         layer.delete(`${y}|${x}`);
       }
-      layer.isDirty = true;
+      // @TODO Optimization
+      // layer.isDirty = true;
     }
 
     _hoverTilePlace(x, y) {
-      for (const [place, tile] of this._layers['1'].entries()) {
+      for (const [place, tile] of this._layers[FOREGROUND_LAYER].entries()) {
         if (tile != null) {
-          const [_y, _x] = place.split('|');
-          if (x === _x && y === _y) return;
-          else this._updateTileByCoord(_x, _y, '1', null);
-        } 
+          const [_y, _x] = Point.fromString(place).toArray();
+          if (Point.isEqual(x, y, _x, _y)) return;
+      
+          this._updateTileByCoord(_x, _y, FOREGROUND_LAYER, null);
+        }
       }
-      this._updateTileByCoord(x, y, '1', this._hoverTile);
+      this._updateTileByCoord(x, y, FOREGROUND_LAYER, this._hoverTile);
     }
 
     _drawTiles() {
-      this._drawLayer(this._layers['-1']);
-      this._drawLayer(this._layers['0']);
-      this._drawLayer(this._layers['1']);
+      this._drawLayer(this._layers[BACKGROUND_LAYER]);
+      this._drawLayer(this._layers[ZERO_LAYER]);
+      this._drawLayer(this._layers[FOREGROUND_LAYER]);
     }
 
     _drawLayer(layer) {
-      for (const [place, tile] of layer.entries()) {
-        const [y, x] = place.split('|');
-        this._ctx.drawImage(tile, Number(x) * this._tileSize.x, Number(y) * this._tileSize.y, this._tileSize.x, this._tileSize.y);
+      try {
+        for (const [place, tile] of layer.entries()) {
+          const [y, x] = Point.fromString(place).toArray();
+          this._ctx.drawImage(
+            tile.bitmap,
+            x * this._tileSize.x,
+            y * this._tileSize.y,
+            this._tileSize.x,
+            this._tileSize.y,
+          );
+        }
+      } catch (e) {
+        console.error('tileable-canvas::_drawLayer', e);
       }
 
       // @TODO Optimization
@@ -152,7 +166,15 @@ const TileableCanvasMixin = (BaseClass = CustomCanvas) => {
       const ctx = canvas.getContext('2d');
       ctx.fillStyle = 'hsla(0, 0%, 0%, .1)';
       ctx.fillRect(0, 0, this._tileSize.x, this._tileSize.y);
-      this._hoverTile = await createImageBitmap(canvas, 0, 0, this._tileSize.x, this._tileSize.y);
+      this._hoverTile = { bitmap: await createImageBitmap(canvas, 0, 0, this._tileSize.x, this._tileSize.y) };
+    }
+  
+    _resize(multiplier) {
+      this._tileSize.x *= multiplier;
+      this._tileSize.y *= multiplier;
+      
+      if (super._resize != null) super._resize(multiplier);
+      this._renderInNextFrame();
     }
 
     constructor(options = {}) {
@@ -172,13 +194,14 @@ const TileableCanvasMixin = (BaseClass = CustomCanvas) => {
 
       await super.init();
     }
-
-    _resize(multiplier) {
-      this._tileSize.x *= multiplier;
-      this._tileSize.y *= multiplier;
-      if (super._resize) super._resize(multiplier);
-      // this._calcGrid();
-      this._renderInNextFrame();
+  
+    async updateCurrentTiles(tiles) {
+      this._tiles = tiles;
+    }
+  
+    updateSize(width, height) {
+      super.updateSize(width, height);
+      this._calcGrid();
     }
   }
 

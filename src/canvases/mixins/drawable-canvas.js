@@ -106,17 +106,9 @@ const DrawableCanvasMixin = (BaseClass = CustomCanvas) => {
     }
 
     async save() {
-      const a = document.createElement("a");
-      a.style = "display: none";
-      document.body.appendChild(a);
-      
       this._render(null, true);
 
       const img = await new Promise((resolve) => this._el.toBlob(resolve, 'image/png'));
-      a.href = URL.createObjectURL(img);
-      a.download = 'tilemap.png';
-      a.click();
-      URL.revokeObjectURL(a.href);
       
       this._render();
 
@@ -135,13 +127,7 @@ const DrawableCanvasMixin = (BaseClass = CustomCanvas) => {
         };
       }
       
-      const blob = new Blob([JSON.stringify(json)], { type: 'application/json' });
-      a.href = URL.createObjectURL(blob);
-      a.download = 'tilemap.json';
-      a.click();
-      URL.revokeObjectURL(a.href);
-
-      a.remove();
+      return { img, meta: json };
     }
 
     async load({ meta: tilesMeta, img }) {

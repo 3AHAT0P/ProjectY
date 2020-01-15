@@ -16,9 +16,29 @@ const createButton = (to, label, onClick) => {
   return button;
 };
 
+const saveMap = async (canvas) => {
+  const a = document.createElement("a");
+  a.style = "display: none";
+  document.body.appendChild(a);
+  
+  const { img, meta } = await canvas.save();
+  a.href = URL.createObjectURL(img);
+  a.download = 'tilemap.png';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  
+  const blob = new Blob([JSON.stringify(meta)], { type: 'application/json' });
+  a.href = URL.createObjectURL(blob);
+  a.download = 'tilemap.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  
+  a.remove();
+};
+
 const main = async () => {
   const mainCanvas = await MainCanvas.create({ el: document.getElementById('main'), size: { width: 512, height: 512 } });
-  const saveButton = createButton(document.body, 'Save', () => mainCanvas.save());
+  const saveButton = createButton(document.body, 'Save', () => saveMap(mainCanvas));
   const currentTileCanvas = await CustomCanvas.create({ el: document.getElementById('current'), size: { width: 64, height: 64 } });
   const mainTileSet = await MainTileSet.create({ el: document.getElementById('tileSet') });
 

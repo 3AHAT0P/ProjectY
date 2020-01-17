@@ -32,6 +32,13 @@ export default class Point {
     return [this.x, this.y];
   }
   
+  toObject() {
+    return {
+      x: this.x,
+      y: this.y,
+    }
+  }
+  
   isEqualTo(x, y) {
     return this.constructor.isEqual(this.x, this.y, x, y);
   }

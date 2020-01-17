@@ -1,6 +1,6 @@
 import buildEvent from '../../utils/build-event.js';
-import Cursor from '../../utils/cursor.js';
-import Point from '../../utils/point.js';
+import Cursor from '../../utils/Cursor.js';
+import Point from '../../utils/Point.js';
 import CustomCanvas from '../../canvases/custom-canvas.js';
 import TileableCanvasMixin, {
   TileableCanvas,
@@ -104,30 +104,21 @@ const DrawableCanvasMixin = (BaseClass = CustomCanvas) => {
       await this._cursor.updateImageFromBitmap(tiles);
       this._cursor.showCursor();
     }
-
+  
     async save() {
-      this._render(null, true);
-
-      const img = await new Promise((resolve) => this._el.toBlob(resolve, 'image/png'));
-      
-      this._render();
-
       const json = {
         tileHash: {},
         tileMapSize: {
           width: this.width,
           height: this.height,
-        }
+        },
       };
-      
+    
       for (const [key, tile] of this._layers[ZERO_LAYER].entries()) {
-        json.tileHash[key] = {
-          sourceSrc: tile.sourceSrc,
-          sourceCoords: tile.sourceCoords,
-        };
+        json.tileHash[key] = tile.meta;
       }
-      
-      return { img, meta: json };
+    
+      return { meta: json };
     }
 
     async load({ meta: tilesMeta, img }) {

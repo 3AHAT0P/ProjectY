@@ -21,11 +21,7 @@ const saveMap = async (canvas) => {
   a.style = "display: none";
   document.body.appendChild(a);
   
-  const { img, meta } = await canvas.save();
-  a.href = URL.createObjectURL(img);
-  a.download = 'tilemap.png';
-  a.click();
-  URL.revokeObjectURL(a.href);
+  const { meta } = await canvas.save();
   
   const blob = new Blob([JSON.stringify(meta)], { type: 'application/json' });
   a.href = URL.createObjectURL(blob);

@@ -2,6 +2,7 @@ import { TileableCanvas } from '../../src/canvases/mixins/tileable-canvas.js';
 import SelectableCanvasMixin from '../../src/canvases/mixins/selectable-canvas.js';
 import ResizeableCanvasMixin from '../../src/canvases/mixins/resizeable-canvas.js';
 import buildEvent from '../../src/utils/build-event.js';
+import Tile from '../../src/utils/Tile.js';
 
 export default class MineTileMap extends SelectableCanvasMixin(ResizeableCanvasMixin(TileableCanvas)) {
   _imageSrcLink = 'content/tilesets/main-tile-set.png';
@@ -57,18 +58,19 @@ export default class MineTileMap extends SelectableCanvasMixin(ResizeableCanvasM
   }
 
   async _parse() {
+    const source = {
+      data: this._imageSrc,
+      url: this._imageSrcLink,
+      tileSize: { ...this._tileSize },
+    };
     const promises = [];
     for (let row = 0; row < this._rowsNumber; row += 1) {
       const y = row * this._tileSize.y;
       for (let col = 0; col < this._columnsNumber; col += 1) {
         const x = col * this._tileSize.x;
         promises.push(
-          createImageBitmap(this._imageSrc, x, y, this._tileSize.x, this._tileSize.y)
-            .then((tile) => this._updateTileByCoord(col, row, '0', {
-              bitmap: tile,
-              sourceSrc: this._imageSrcLink,
-              sourceCoords: { x: col, y: row },
-            })),
+          Tile.fromTileSet(source, { x, y }, { sourceCoords: { x: col, y: row }, size: { ...this._tileSize }})
+            .then((tile) => this._updateTileByCoord(col, row, '0', tile)),
         );
       }
     }

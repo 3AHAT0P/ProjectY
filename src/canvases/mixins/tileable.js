@@ -1,6 +1,6 @@
 import buildEvent from '../../utils/buildEvent.js';
 import CustomCanvas from '../customCanvas.js';
-import Point from '../../utils/Point.js';
+import Point from '../../classes/Point.js';
 
 const _onMouseMoveHandler = Symbol('_onMouseMoveHandler');
 const _onMouseOutHandler = Symbol('_onMouseOutHandler');

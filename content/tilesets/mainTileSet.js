@@ -2,7 +2,7 @@ import { Tileable } from '../../src/canvases/mixins/tileable.js';
 import SelectableCanvasMixin from '../../src/canvases/mixins/selectable.js';
 import ResizeableCanvasMixin from '../../src/canvases/mixins/resizeable.js';
 import buildEvent from '../../src/utils/buildEvent.js';
-import Tile from '../../src/utils/Tile.js';
+import Tile from '../../src/classes/Tile.js';
 
 export default class MainTileSet extends SelectableCanvasMixin(ResizeableCanvasMixin(Tileable)) {
   _imageSrcLink = 'content/tilesets/mainTileSet.png';

@@ -1,6 +1,6 @@
 import buildEvent from '../../utils/buildEvent.js';
-import Cursor from '../../utils/Cursor.js';
-import Point from '../../utils/Point.js';
+import Cursor from '../../classes/Cursor.js';
+import Point from '../../classes/Point.js';
 import CustomCanvas from '../customCanvas.js';
 import TileableCanvasMixin, {
   Tileable,

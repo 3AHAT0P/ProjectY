@@ -1,5 +1,5 @@
-import MainTileSet from './content/tilesets/mainTileSet.js';
-import MainTileMap from './content/tilemaps/tileMap.js';
+import MainTileSet from './content/tilesets/MainTileSet.js';
+import MainTileMap from './content/tilemaps/MainTileMap.js';
 import CustomCanvas from './src/canvases/СustomCanvas.js';
 import ResizeableCanvasMixin from './src/canvases/mixins/resizeable.js';
 import TileableCanvasMixin from './src/canvases/mixins/tileable.js';

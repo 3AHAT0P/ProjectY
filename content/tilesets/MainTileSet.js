@@ -78,7 +78,7 @@ export default class MainTileSet extends SelectableCanvasMixin(ResizeableCanvasM
     await Promise.all(promises);
   }
 
-  //TODO need to check if it needed. We have such method in tileMap.js
+  //TODO need to check if it needed. We have such method in MainTileMap.js
   async _loadMetadata() {
     this._metadataSrc = await (await fetch(this._metadataSrcLink)).json();
   }

@@ -1,11 +1,11 @@
-import { TileableCanvas } from '../../src/canvases/mixins/tileable-canvas.js';
-import SelectableCanvasMixin from '../../src/canvases/mixins/selectable-canvas.js';
-import ResizeableCanvasMixin from '../../src/canvases/mixins/resizeable-canvas.js';
-import buildEvent from '../../src/utils/build-event.js';
-import Tile from '../../src/utils/Tile.js';
+import { Tileable } from '../../src/canvases/mixins/tileable.js';
+import SelectableCanvasMixin from '../../src/canvases/mixins/selectable.js';
+import ResizeableCanvasMixin from '../../src/canvases/mixins/resizeable.js';
+import buildEvent from '../../src/utils/buildEvent.js';
+import Tile from '../../src/classes/Tile.js';
 
-export default class MineTileMap extends SelectableCanvasMixin(ResizeableCanvasMixin(TileableCanvas)) {
-  _imageSrcLink = 'content/tilesets/main-tile-set.png';
+export default class MainTileSet extends SelectableCanvasMixin(ResizeableCanvasMixin(Tileable)) {
+  _imageSrcLink = 'content/tilesets/mainTileSet.png';
   _imageSrc = null;
 
   _metadataSrcLink = 'content/tilesets/main-tile-set.json';
@@ -78,7 +78,7 @@ export default class MineTileMap extends SelectableCanvasMixin(ResizeableCanvasM
     await Promise.all(promises);
   }
 
-  //TODO need to check if it needed. We have such method in tile-map.js
+  //TODO need to check if it needed. We have such method in MainTileMap.js
   async _loadMetadata() {
     this._metadataSrc = await (await fetch(this._metadataSrcLink)).json();
   }

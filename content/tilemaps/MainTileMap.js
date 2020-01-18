@@ -1,6 +1,6 @@
-import { DrawableCanvas } from '../../src/canvases/mixins/drawable-canvas.js';
+import { DrawableCanvas } from '../../src/canvases/mixins/drawable.js';
 
-export default class MineTileMap extends DrawableCanvas {
+export default class MainTileMap extends DrawableCanvas {
   _imageSrcLink = './content/tilemaps/tilemap.png';
   _imageSrc = null;
   _sourceTileMapSize = {

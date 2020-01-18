@@ -1,4 +1,4 @@
-import buildEvent from '../utils/build-event.js';
+import buildEvent from '../utils/buildEvent.js';
 import throttle from '../utils/throttle.js';
 
 /* 
@@ -6,7 +6,7 @@ import throttle from '../utils/throttle.js';
   const customCanvas = await CustomCanvas.create({ el: document.body, size: { width: 64, height: 64 } });
   customCanvas.addEventListener('render', (event) => { if (tile != null) event.ctx.drawImage(tile, 0, 0, 64, 64); });
  */
-export default class Canvas extends EventTarget {
+export default class CustomCanvas extends EventTarget {
   static _metaClassNames = [];
   
   static async create(...args) {

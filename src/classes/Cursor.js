@@ -1,5 +1,5 @@
-import drawImageFromMap from './drawImageFromMap.js';
-import getTilesRectSizes from './getTilesRectSizes.js';
+import drawImageFromMap from '../utils/drawImageFromMap.js';
+import getTilesRectSizes from '../utils/getTilesRectSizes.js';
 
 const updateImageColorVolume = (imageData) => {
   let pixels = imageData.data;

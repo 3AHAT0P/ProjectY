@@ -1,5 +1,5 @@
 import buildEvent from '../../utils/buildEvent.js';
-import CustomCanvas from '../customCanvas.js';
+import CustomCanvas from '../СustomCanvas.js';
 
 const _onMouseDownHandler = Symbol('_onMouseDownHandler');
 const _onMouseUpHandler = Symbol('_onMouseUpHandler');

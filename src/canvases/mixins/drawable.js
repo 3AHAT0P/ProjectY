@@ -1,7 +1,7 @@
 import buildEvent from '../../utils/buildEvent.js';
 import Cursor from '../../classes/Cursor.js';
 import Point from '../../classes/Point.js';
-import CustomCanvas from '../customCanvas.js';
+import CustomCanvas from '../СustomCanvas.js';
 import TileableCanvasMixin, {
   Tileable,
   BACKGROUND_LAYER,

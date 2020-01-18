@@ -1,4 +1,4 @@
-import CustomCanvas from './src/canvases/customCanvas.js';
+import CustomCanvas from './src/canvases/СustomCanvas.js';
 import ResizeableCanvasMixin from './src/canvases/mixins/resizeable.js';
 
 class TestCanvas extends ResizeableCanvasMixin(CustomCanvas) {

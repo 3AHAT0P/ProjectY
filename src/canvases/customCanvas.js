@@ -1,4 +1,4 @@
-import buildEvent from '../utils/build-event.js';
+import buildEvent from '../utils/buildEvent.js';
 import throttle from '../utils/throttle.js';
 
 /* 

@@ -1,13 +1,13 @@
-import buildEvent from '../../utils/build-event.js';
+import buildEvent from '../../utils/buildEvent.js';
 import Cursor from '../../utils/Cursor.js';
 import Point from '../../utils/Point.js';
-import CustomCanvas from '../../canvases/custom-canvas.js';
+import CustomCanvas from '../customCanvas.js';
 import TileableCanvasMixin, {
-  TileableCanvas,
+  Tileable,
   BACKGROUND_LAYER,
   ZERO_LAYER,
   FOREGROUND_LAYER,
-} from '../../canvases/mixins/tileable-canvas.js';
+} from './tileable.js';
 
 const _onMouseEnterHandler = Symbol('_onMouseEnterHandler');
 const _onMouseLeaveHandler = Symbol('_onMouseLeaveHandler');

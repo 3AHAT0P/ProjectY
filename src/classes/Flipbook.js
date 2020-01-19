@@ -3,11 +3,14 @@ import Sprite from './Sprite';
  * Flipbook is used to animate multiple images (like GIFs)
  */
 export default class Flipbook {
-  meta = {
+  options = {
     frameDuration: 300,
   };
   _spriteUrls = [];
   _sprites = [];
+  _currentSprite = null;
+  _currentSpriteIndex = 0;
+  _timer = null;
   
   /**
    * The main method to create Flipbook.
@@ -23,7 +26,7 @@ export default class Flipbook {
   }
   
   constructor(sprites, options) {
-    if (sprites == null) throw new Error('Sprites are required!');
+    if (sprites == null || sprites.length < 1) throw new Error('Sprites are required!');
     if (options && options.frameDuration) this.options = options;
     this._spriteUrls = sprites;
   }
@@ -39,5 +42,24 @@ export default class Flipbook {
     } catch (error) {
       throw new TypeError('Sprites of Flipbook should be an array of image links');
     }
+  }
+  
+  get currentSprite() {
+    return this._currentSprite;
+  }
+  
+  start() {
+    this._timer = setInterval(() => {
+      this._currentSprite = this._sprites[this._currentSpriteIndex];
+      const nextSpriteIndex = this._currentSpriteIndex + 1;
+      
+      if (nextSpriteIndex > this._sprites.length) this._currentSpriteIndex = 0;
+      else this._currentSpriteIndex = nextSpriteIndex;
+    }, this.options.frameDuration)
+  }
+  
+  stop() {
+    clearInterval(this._timer);
+    this._currentSpriteIndex = 0;
   }
 }

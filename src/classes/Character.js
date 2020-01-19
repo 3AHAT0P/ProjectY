@@ -66,10 +66,10 @@ export default class Character {
       attackSettings: { ...attackSettings },
     };
     if (typeof mainFlipbook === 'string') characterSettings.mainFlipbook = await new Sprite(mainFlipbook).load();
-    if (mainFlipbook instanceof Object) characterSettings.mainFlipbook = await Flipbook.create(mainFlipbook);
-    if (moveFlipbook instanceof Object) characterSettings.moveSettings.moveFlipbook = await Flipbook.create(moveFlipbook, moveFlipbookMeta);
-    if (jumpFlipbook instanceof Object) characterSettings.jumpSettings.jumpFlipbook = await Flipbook.create(jumpFlipbook, jumpFlipbookMeta);
-    if (attackFlipbook instanceof Object) characterSettings.attackSettings.attackFlipbook = await Flipbook.create(attackFlipbook, attackFlipbookMeta);
+    if (mainFlipbook instanceof Array) characterSettings.mainFlipbook = await Flipbook.create(mainFlipbook);
+    if (moveFlipbook instanceof Array) characterSettings.moveSettings.moveFlipbook = await Flipbook.create(moveFlipbook, moveFlipbookMeta);
+    if (jumpFlipbook instanceof Array) characterSettings.jumpSettings.jumpFlipbook = await Flipbook.create(jumpFlipbook, jumpFlipbookMeta);
+    if (attackFlipbook instanceof Array) characterSettings.attackSettings.attackFlipbook = await Flipbook.create(attackFlipbook, attackFlipbookMeta);
   
     return new Character(characterSettings);
   }

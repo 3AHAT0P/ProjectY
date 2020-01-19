@@ -34,10 +34,20 @@ export default class Character {
   
   /**
    * The main method to create a character
-   * @param {string | Object} mainFlipbook - sprite or
-   * @param moveSettings
-   * @param jumpSettings
-   * @param attackSettings
+   * @param {Sprite | Flipbook} mainFlipbook - Sprite or Flipbook instance
+   * @param {Object} moveSettings - settings for move action
+   * @param {Flipbook} moveSettings.moveFlipbook
+   * @param {string} moveSettings.moveRightCode - main right move action code
+   * @param {string} moveSettings.moveLeftCode - main left move action code
+   * @param {string} moveSettings.alternativeMoveRightCode - alternative right move action code
+   * @param {string} moveSettings.alternativeMoveLeftCode - alternative left move action code
+   * @param {Object} jumpSettings - settings for jump action
+   * @param {Flipbook} jumpSettings.jumpFlipbook
+   * @param {string} jumpSettings.jumpCode - main jump action code
+   * @param {string} jumpSettings.alternativeJumpCode - alternative jump action code
+   * @param {Object} attackSettings - settings for attack actions
+   * @param {Flipbook} attackSettings.attackFlipbook
+   * @param {string} attackSettings.attackCode - main attack action code
    * @returns {Promise<Character>}
    */
   static async create({

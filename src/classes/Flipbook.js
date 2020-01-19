@@ -1,39 +1,43 @@
+import Sprite from './Sprite';
 /**
  * Flipbook is used to animate multiple images (like GIFs)
  */
-import Sprite from './Sprite';
-
 export default class Flipbook {
   meta = {
     frameDuration: 300,
   };
+  _spriteUrls = [];
+  _sprites = [];
   
   /**
    * The main method to create Flipbook.
    * @param {string[]} sprites - array of image links
-   * @param {Object} meta - meta info for Flippbok
-   * @param {number} meta.frameDuration - duration between frames
+   * @param {Object} options - meta info for Flippbok
+   * @param {number} options.frameDuration - duration between frames
    * @returns {Promise<Flipbook>}
    */
-  static async create(sprites, meta) {
-    if (sprites == null) throw new Error('Sprites are required!');
-    
-    let flipbookFrames;
-    
-    if (sprites instanceof Array && sprites.length > 1) {
-      flipbookFrames = sprites.map(sprite => new Sprite(sprite).load());
-      await Promise.all(flipbookFrames);
-    }
-    else throw new TypeError('Sprites of Flipbook should be an array of image links');
-    
-    return new Flipbook(flipbookFrames, meta);
+  static async create(sprites, options) {
+    const instance = new this(sprites, options);
+    await instance.init();
+    return instance;
   }
   
-  constructor(sprites, meta) {
-    if (sprites instanceof Array && sprites.every(sprite => (sprite instanceof Sprite))) {
-      this.frames = sprites;
-      if (meta && meta.frameDuration) this.meta = meta;
+  constructor(sprites, options) {
+    if (sprites == null) throw new Error('Sprites are required!');
+    if (options && options.frameDuration) this.options = options;
+    this._spriteUrls = sprites;
+  }
+  
+  async init() {
+    for (const url of this._spriteUrls) this._sprites.push(new Sprite(url));
+    await this.load();
+  }
+  
+  async load() {
+    try {
+      await Promise.all(this._sprites.map((sprite) => sprite.load()));
+    } catch (error) {
+      throw new TypeError('Sprites of Flipbook should be an array of image links');
     }
-    else throw new Error('Use Flipbook.create method')
   }
 }

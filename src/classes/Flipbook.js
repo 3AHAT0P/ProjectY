@@ -61,5 +61,6 @@ export default class Flipbook {
   stop() {
     clearInterval(this._timer);
     this._currentSpriteIndex = 0;
+    this._currentSprite = this._sprites[this._currentSpriteIndex];
   }
 }

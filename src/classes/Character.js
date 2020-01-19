@@ -1,12 +1,15 @@
-/**
- * ex. await new Character();
- * ex. new Character().then(character => { // some logic })
- */
-import DynamicSprite from './DynamicSprite';
+import Flipbook from './Flipbook';
+import Sprite from './Sprite';
+
+const ERROR_HELP_TEXT = 'Use Character.create method to create character with a set of sprites';
 
 export default class Character {
+  mainSettings = {
+    mainFlipbook: null,
+  };
+  
   moveSettings = {
-    moveSprite: null,
+    moveFlipbook: null,
     moveRightCode: 'ArrowRight',
     moveLeftCode: 'ArrowLeft',
     alternativeMoveRightCode: 'KeyD',
@@ -14,13 +17,13 @@ export default class Character {
   };
 
   jumpSettings = {
-    jumpSprite: null,
+    jumpFlipbook: null,
     jumpCode: 'ArrowUp',
     alternativeJumpCode: 'KeyW',
   };
 
   attackSettings = {
-    attackSprite: null,
+    attackFlipbook: null,
     attackCode: 'Space',
   };
 
@@ -29,29 +32,63 @@ export default class Character {
     y: null,
   };
   
+  /**
+   * The main method to create a character
+   * @param {string | Object} mainFlipbook - sprite or
+   * @param moveSettings
+   * @param jumpSettings
+   * @param attackSettings
+   * @returns {Promise<Character>}
+   */
+  static async create({
+    mainFlipbook,
+    moveSettings = {},
+    jumpSettings = {},
+    attackSettings = {},
+  }) {
+    const { moveFlipbook, moveFlipbookMeta } = moveSettings;
+    const { jumpFlipbook, jumpFlipbookMeta } = jumpSettings;
+    const { attackFlipbook, attackFlipbookMeta } = attackSettings;
+    
+    const characterSettings = {
+      moveSettings: { ...moveSettings },
+      jumpSettings: { ...jumpSettings },
+      attackSettings: { ...attackSettings },
+    };
+    if (typeof mainFlipbook === 'string') characterSettings.mainFlipbook = await new Sprite(mainFlipbook).load();
+    if (mainFlipbook instanceof Object) characterSettings.mainFlipbook = await Flipbook.create(mainFlipbook);
+    if (moveFlipbook instanceof Object) characterSettings.moveSettings.moveFlipbook = await Flipbook.create(moveFlipbook, moveFlipbookMeta);
+    if (jumpFlipbook instanceof Object) characterSettings.jumpSettings.jumpFlipbook = await Flipbook.create(jumpFlipbook, jumpFlipbookMeta);
+    if (attackFlipbook instanceof Object) characterSettings.attackSettings.attackFlipbook = await Flipbook.create(attackFlipbook, attackFlipbookMeta);
+  
+    return new Character(characterSettings);
+  }
+  
   constructor({
-    mainSprite,
+    mainFlipbook,
     moveSettings: {
-      moveSprite,
-      moveSpriteMeta,
+      moveFlipbook,
       moveRightCode,
       moveLeftCode,
       alternativeMoveRightCode,
       alternativeMoveLeftCode,
-    },
+    } = {},
     jumpSettings: {
-      jumpSprite,
-      jumpSpriteMeta,
+      jumpFlipbook,
       jumpCode,
       alternativeJumpCode,
-    },
+    } = {},
     attackSettings: {
-      attackSprite,
-      attackSpriteMeta,
+      attackFlipbook,
       attackCode,
-    },
+    } = {},
   }) {
-    if (mainSprite == null) throw new Error('mainSprite is required!');
+    this._validateFlipbooks(mainFlipbook, moveFlipbook, jumpFlipbook, attackFlipbook);
+
+    this.mainSettings.mainFlipbook = mainFlipbook;
+    this.moveSettings.moveFlipbook = moveFlipbook;
+    this.jumpSettings.jumpFlipbook = jumpFlipbook;
+    this.attackSettings.attackFlipbook = attackFlipbook;
     // move codes override
     if (moveRightCode) this.moveSettings.moveRightCode = moveRightCode;
     if (moveLeftCode) this.moveSettings.moveLeftCode = moveLeftCode;
@@ -62,17 +99,8 @@ export default class Character {
     if (alternativeJumpCode) this.jumpSettings.alternativeJumpCode = alternativeJumpCode;
     // attack code override
     if (attackCode) this.attackSettings.attackCode = attackCode;
-    
-    return (async () => {
-      if (typeof mainSprite === 'string') this.mainSprite = await this._loadImage(mainSprite);
-      if (moveSprite instanceof Object) this.moveSettings.moveSprite = await this._loadDynamicSprite(moveSprite, moveSpriteMeta);
-      if (jumpSprite instanceof Object) this.jumpSettings.jumpSprite = await this._loadDynamicSprite(jumpSprite, jumpSpriteMeta);
-      if (attackSprite instanceof Object) this.attackSettings.attackSprite = await this._loadDynamicSprite(attackSprite, attackSpriteMeta);
-      
-      this._offscreenCanvas = new OffscreenCanvas(this.mainSprite.width, this.mainSprite.height);
-      
-      return this;
-    })();
+
+    this._offscreenCanvas = new OffscreenCanvas(this.mainFlipbook.width, this.mainFlipbook.height);
   }
   
   move() {}
@@ -82,24 +110,19 @@ export default class Character {
   stop() {}
   attack() {}
   
-  async _loadImage(src) {
-    const image = new Image();
-    await new Promise((resolve, reject) => {
-      image.onload = resolve;
-      image.onerror = reject;
-      image.src = src;
-    });
+  _validateFlipbooks(mainFlipbook, moveFlipbook, jumpFlipbook, attackFlipbook) {
+    const isMainFlipbookValid = mainFlipbook != null && (mainFlipbook instanceof Sprite || mainFlipbook instanceof Flipbook);
+    const isMoveFlipbookValid = moveFlipbook != null && moveFlipbook instanceof Flipbook;
+    const isJumpFlipbookValid = jumpFlipbook != null && jumpFlipbook instanceof Flipbook;
+    const isAttackFlipbookValid = attackFlipbook != null && attackFlipbook instanceof Flipbook;
     
-    return image;
-  }
-  
-  async _loadDynamicSprite(sprites, meta) {
-    if (sprites instanceof Array && sprites.length > 1) {
-      const promises = sprites.map(async ({ src }) => await this._loadImage(src));
-      await Promise.all(promises);
-      
-      return new DynamicSprite(promises, meta);
-    }
-    else throw new Error('Sprites for dynamic motion should be an array of images')
+    const invalidFlipbooks = [];
+    
+    if (!isMainFlipbookValid) invalidFlipbooks.push('mainFlipbook');
+    if (!isMoveFlipbookValid) invalidFlipbooks.push('moveFlipbook');
+    if (!isJumpFlipbookValid)  invalidFlipbooks.push('jumpFlipbook');
+    if (!isAttackFlipbookValid) invalidFlipbooks.push('attackFlipbook');
+    
+    if (invalidFlipbooks.length) throw new Error(`${invalidFlipbooks} are required! ${ERROR_HELP_TEXT}`)
   }
 }

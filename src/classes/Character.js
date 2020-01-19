@@ -28,12 +28,15 @@ export default class Character {
   };
 
   position = {
-    x: null,
-    y: null,
+    x: 0,
+    y: 0,
   };
   
   /**
    * The main method to create a character
+   * @param {Object} position - initial Character position
+   * @param {number} position.x - canvas coordinates
+   * @param {number} position.y - canvas coordinates
    * @param {string | string[]} mainFlipbook - url or array of url
    * @param {Object} moveSettings - settings for move action
    * @param {string[]} moveSettings.moveFlipbook - array of url
@@ -51,6 +54,7 @@ export default class Character {
    * @returns {Promise<Character>}
    */
   static async create({
+    position,
     mainFlipbook,
     moveSettings = {},
     jumpSettings = {},
@@ -61,6 +65,7 @@ export default class Character {
     const { attackFlipbook, attackFlipbookMeta } = attackSettings;
     
     const characterSettings = {
+      position,
       moveSettings: { ...moveSettings },
       jumpSettings: { ...jumpSettings },
       attackSettings: { ...attackSettings },
@@ -75,6 +80,9 @@ export default class Character {
   }
   
   /**
+   * @param {Object} position - initial Character position
+   * @param {number} position.x - canvas coordinates
+   * @param {number} position.y - canvas coordinates
    * @param {Sprite | Flipbook} mainFlipbook - Sprite or Flipbook instance
    * @param {Object} moveSettings - settings for move action
    * @param {Flipbook} moveSettings.moveFlipbook
@@ -92,6 +100,7 @@ export default class Character {
    * @returns {Character}
    */
   constructor({
+    position,
     mainFlipbook,
     moveSettings: {
       moveFlipbook,
@@ -126,8 +135,15 @@ export default class Character {
     if (alternativeJumpCode) this.jumpSettings.alternativeJumpCode = alternativeJumpCode;
     // attack code override
     if (attackCode) this.attackSettings.attackCode = attackCode;
-
-    this._offscreenCanvas = new OffscreenCanvas(this.mainFlipbook.width, this.mainFlipbook.height);
+  
+    // initial position overrides
+    if (typeof position.x === 'number') this.position.x = position.x;
+    if (typeof position.y === 'number') this.position.y = position.y;
+    
+    // TODO change offscreencanvas
+    // this._offscreenCanvas = new OffscreenCanvas(mainFlipbook.width, mainFlipbook.height);
+    // this._renderer = this._offscreenCanvas.getContext('2d');
+    // this._renderer.imageSmoothingEnabled = false;
   }
   
   move() {}

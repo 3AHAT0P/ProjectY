@@ -34,6 +34,7 @@ export default class Flipbook {
   async init() {
     for (const url of this._spriteUrls) this._sprites.push(new Sprite(url));
     await this.load();
+    this._currentSprite = this._sprites[0];
   }
   
   async load() {
@@ -62,5 +63,13 @@ export default class Flipbook {
     clearInterval(this._timer);
     this._currentSpriteIndex = 0;
     this._currentSprite = this._sprites[this._currentSpriteIndex];
+  }
+  
+  get width() {
+    return this._currentSprite.width;
+  }
+  
+  get height() {
+    return this._currentSprite.height;
   }
 }

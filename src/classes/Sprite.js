@@ -15,4 +15,12 @@ export default class Sprite {
     
     return this;
   }
+  
+  get width() {
+    return this.image.width;
+  }
+  
+  get height() {
+    return this.image.height;
+  }
 }

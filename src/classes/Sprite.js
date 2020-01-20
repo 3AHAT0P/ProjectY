@@ -11,16 +11,20 @@ export default class Sprite {
       image.onerror = reject;
       image.src = this.src;
     });
-    this.image = image;
+    this._image = image;
     
     return this;
   }
   
   get width() {
-    return this.image.width;
+    return this._image.width;
   }
   
   get height() {
-    return this.image.height;
+    return this._image.height;
+  }
+  
+  get currentSprite() {
+    return this._image;
   }
 }

@@ -140,10 +140,11 @@ export default class Character {
     if (typeof position.x === 'number') this.position.x = position.x;
     if (typeof position.y === 'number') this.position.y = position.y;
     
-    // TODO change offscreencanvas
-    // this._offscreenCanvas = new OffscreenCanvas(mainFlipbook.width, mainFlipbook.height);
-    // this._renderer = this._offscreenCanvas.getContext('2d');
-    // this._renderer.imageSmoothingEnabled = false;
+    this._offscreenCanvas = document.createElement('canvas');
+    this._offscreenCanvas.width = mainFlipbook.width;
+    this._offscreenCanvas.height = mainFlipbook.height;
+    this._renderer = this._offscreenCanvas.getContext('2d');
+    this._renderer.imageSmoothingEnabled = false;
   }
   
   move() {}

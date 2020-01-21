@@ -51,12 +51,12 @@ export default class Flipbook {
   get currentSprite() {
     return this._offscreenCanvas;
   }
-  // TODO need to implement drawing on _offscreenCanvas when _currentSprite changes. And consider Mirror option.
-  //  it should be separate private method.
+
   start() {
     this._timer = setInterval(() => {
       this._currentSprite = this._sprites[this._currentSpriteIndex];
       this._updateSize();
+      this._render();
       const nextSpriteIndex = this._currentSpriteIndex + 1;
       
       if (nextSpriteIndex > this._sprites.length) this._currentSpriteIndex = 0;
@@ -88,5 +88,23 @@ export default class Flipbook {
   _updateSize() {
     this._offscreenCanvas.width = this._currentSprite.width;
     this._offscreenCanvas.height = this._currentSprite.height;
+  }
+  
+  _render() {
+    const isMirror = this.options.mirror;
+    this._renderer.clearRect(0, 0, this.width, this.height);
+    if (isMirror) this._renderer.scale(-1, 1);
+    this._renderer.drawImage(
+      this._currentSprite.currentSprite,
+      0,
+      0,
+      this._currentSprite.width,
+      this._currentSprite.height,
+      0,
+      0,
+      this.width * (isMirror ? -1 : 1),
+      this.height,
+    );
+    if (isMirror) this._renderer.setTransform(1, 0, 0, 1, 0, 0);
   }
 }

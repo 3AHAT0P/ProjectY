@@ -6,16 +6,17 @@ const ERROR_HELP_TEXT = 'Use Character.create method to create character with a 
 export default class Character {
   _coreElement = null;
   _actionHandlerHash = {
-    [this.moveSettings.moveLeftCode]: this.moveLeft,
-    [this.moveSettings.alternativeMoveLeftCode]: this.moveLeft,
-    [this.moveSettings.moveRightCode]: this.moveRight,
-    [this.moveSettings.alternativeMoveRightCode]: this.moveRight,
-    [this.jumpSettings.jumpCode]: this.jump,
-    [this.jumpSettings.alternativeJumpCode]: this.jump,
-    [this.attackSettings.attackCode]: this.attack,
+    [this.moveSettings.moveLeftCode]: this.moveLeft.bind(this),
+    [this.moveSettings.alternativeMoveLeftCode]: this.moveLeft.bind(this),
+    [this.moveSettings.moveRightCode]: this.moveRight.bind(this),
+    [this.moveSettings.alternativeMoveRightCode]: this.moveRight.bind(this),
+    [this.jumpSettings.jumpCode]: this.jump.bind(this),
+    [this.jumpSettings.alternativeJumpCode]: this.jump.bind(this),
+    [this.attackSettings.attackCode]: this.attack.bind(this),
   };
   _prevActionType = 'STOP';
   _currentActionType = 'STOP';
+  _direction = 'RIGHT';
   _hooks = {
     onStop: null,
     onMove: null,
@@ -31,10 +32,12 @@ export default class Character {
      * @returns {boolean}
      */
     checkPosition: null,
+    speed: null,
   };
   
   moveSettings = {
-    moveFlipbook: null,
+    moveRightFlipbook: null,
+    moveLeftFlipbook: null,
     moveRightCode: 'ArrowRight',
     moveLeftCode: 'ArrowLeft',
     alternativeMoveRightCode: 'KeyD',
@@ -63,8 +66,10 @@ export default class Character {
    * @param {Object} position - initial Character position
    * @param {number} position.x - canvas coordinates
    * @param {number} position.y - canvas coordinates
-   * @param {string | string[]} mainFlipbook - url or array of url
-   * @param {checkPosition} checkPosition - function to check any collisions and possibility to move.
+   * @param {Object} mainSettings - main Character settings
+   * @param {string | string[]} mainSettings.mainFlipbook - url or array of url
+   * @param {checkPosition} mainSettings.checkPosition - function to check any collisions and possibility to move.
+   * @param {number} mainSettings.speed - speed of a Character in px per second
    * @param {Object} moveSettings - settings for move action
    * @param {string[]} moveSettings.moveFlipbook - array of url
    * @param {string} moveSettings.moveRightCode - main right move action code
@@ -83,8 +88,7 @@ export default class Character {
   static async create({
     coreElement,
     position,
-    mainFlipbook,
-    checkPosition= () => true,
+    mainSettings,
     moveSettings = {},
     jumpSettings = {},
     attackSettings = {},
@@ -96,16 +100,34 @@ export default class Character {
     const characterSettings = {
       coreElement,
       position,
-      checkPosition,
+      mainSettings,
       moveSettings: { ...moveSettings },
       jumpSettings: { ...jumpSettings },
       attackSettings: { ...attackSettings },
     };
-    if (typeof mainFlipbook === 'string') characterSettings.mainFlipbook = await new Sprite(mainFlipbook).load();
-    else if (mainFlipbook instanceof Array) characterSettings.mainFlipbook = await Flipbook.create(mainFlipbook);
-    if (moveFlipbook instanceof Array) characterSettings.moveSettings.moveFlipbook = await Flipbook.create(moveFlipbook, moveFlipbookMeta);
-    if (jumpFlipbook instanceof Array) characterSettings.jumpSettings.jumpFlipbook = await Flipbook.create(jumpFlipbook, jumpFlipbookMeta);
-    if (attackFlipbook instanceof Array) characterSettings.attackSettings.attackFlipbook = await Flipbook.create(attackFlipbook, attackFlipbookMeta);
+    if (typeof mainSettings.mainFlipbook === 'string') characterSettings.mainSettings.mainFlipbook = await new Sprite(mainSettings.mainFlipbook).load();
+    else if (mainSettings.mainFlipbook instanceof Array) characterSettings.mainSettings.mainFlipbook = await Flipbook.create(mainSettings.mainFlipbook);
+    if (moveFlipbook instanceof Array) {
+      characterSettings.moveSettings.moveRightFlipbook = await Flipbook.create(moveFlipbook, moveFlipbookMeta);
+      characterSettings.moveSettings.moveLeftFlipbook = await Flipbook.create(moveFlipbook, {
+        ...moveFlipbookMeta,
+        mirror: true,
+      });
+    }
+    if (jumpFlipbook instanceof Array) {
+      characterSettings.jumpSettings.jumpRightFlipbook = await Flipbook.create(jumpFlipbook, jumpFlipbookMeta);
+      characterSettings.jumpSettings.jumpLeftFlipbook = await Flipbook.create(jumpFlipbook, {
+        ...jumpFlipbookMeta,
+        mirror: true,
+      });
+    }
+    if (attackFlipbook instanceof Array) {
+      characterSettings.attackSettings.attackRightFlipbook = await Flipbook.create(attackFlipbook, attackFlipbookMeta);
+      characterSettings.attackSettings.attackLeftFlipbook = await Flipbook.create(attackFlipbook, {
+        ...attackFlipbookMeta,
+        mirror: true,
+      });
+    }
   
     return new Character(characterSettings);
   }
@@ -115,54 +137,64 @@ export default class Character {
    * @param {Object} position - initial Character position
    * @param {number} position.x - canvas coordinates
    * @param {number} position.y - canvas coordinates
-   * @param {Sprite | Flipbook} mainFlipbook - Sprite or Flipbook instance
-   * @param {checkPosition} checkPosition - function to check any collisions and possibility to move.
+   * @param {Object} mainSettings - main Character settings
+   * @param {Sprite | Flipbook} mainSettings.mainFlipbook - Sprite or Flipbook instance
+   * @param {checkPosition} mainSettings.checkPosition - function to check any collisions and possibility to move.
+   * @param {number} mainSettings.speed - speed of a Character in px per second
    * @param {Object} moveSettings - settings for move action
-   * @param {Flipbook} moveSettings.moveFlipbook
+   * @param {Flipbook} moveSettings.moveRightFlipbook
+   * @param {Flipbook} moveSettings.moveLeftFlipbook
    * @param {string} moveSettings.moveRightCode - main right move action code
    * @param {string} moveSettings.moveLeftCode - main left move action code
    * @param {string} moveSettings.alternativeMoveRightCode - alternative right move action code
    * @param {string} moveSettings.alternativeMoveLeftCode - alternative left move action code
    * @param {Object} jumpSettings - settings for jump action
-   * @param {Flipbook} jumpSettings.jumpFlipbook
+   * @param {Flipbook} jumpSettings.jumpRightFlipbook
+   * @param {Flipbook} jumpSettings.jumpLeftFlipbook
    * @param {string} jumpSettings.jumpCode - main jump action code
    * @param {string} jumpSettings.alternativeJumpCode - alternative jump action code
    * @param {Object} attackSettings - settings for attack actions
-   * @param {Flipbook} attackSettings.attackFlipbook
+   * @param {Flipbook} attackSettings.attackRightFlipbook
+   * @param {Flipbook} attackSettings.attackLeftFlipbook
    * @param {string} attackSettings.attackCode - main attack action code
    * @returns {Character}
    */
   constructor({
     coreElement,
     position,
-    mainFlipbook,
-    checkPosition,
+    mainSettings,
     moveSettings: {
-      moveFlipbook,
+      moveRightFlipbook,
+      moveLeftFlipbook,
       moveRightCode,
       moveLeftCode,
       alternativeMoveRightCode,
       alternativeMoveLeftCode,
     } = {},
     jumpSettings: {
-      jumpFlipbook,
+      jumpRightFlipbook,
+      jumpLeftFlipbook,
       jumpCode,
       alternativeJumpCode,
     } = {},
     attackSettings: {
-      attackFlipbook,
+      attackRightFlipbook,
+      attackLeftFlipbook,
       attackCode,
     } = {},
   }) {
     if (coreElement) this._coreElement = coreElement;
     else throw new Error('coreElement is required for Character!');
 
-    this._validateFlipbooks(mainFlipbook, moveFlipbook, jumpFlipbook, attackFlipbook);
+    this._validateFlipbooks(mainSettings.mainFlipbook, moveRightFlipbook, jumpRightFlipbook, attackRightFlipbook);
 
-    this.mainSettings.mainFlipbook = mainFlipbook;
-    this.moveSettings.moveFlipbook = moveFlipbook;
-    this.jumpSettings.jumpFlipbook = jumpFlipbook;
-    this.attackSettings.attackFlipbook = attackFlipbook;
+    this.mainSettings = mainSettings;
+    this.moveSettings.moveRightFlipbook = moveRightFlipbook;
+    this.moveSettings.moveLeftFlipbook = moveLeftFlipbook;
+    this.jumpSettings.jumpRightFlipbook = jumpRightFlipbook;
+    this.jumpSettings.jumpLeftFlipbook = jumpLeftFlipbook;
+    this.attackSettings.attackRightFlipbook = attackRightFlipbook;
+    this.attackSettings.attackLeftFlipbook = attackLeftFlipbook;
     // move codes override
     if (moveRightCode) this.moveSettings.moveRightCode = moveRightCode;
     if (moveLeftCode) this.moveSettings.moveLeftCode = moveLeftCode;
@@ -180,6 +212,7 @@ export default class Character {
     
     this._createOffscreenCanvas();
     this._initListeners();
+    this._setOnChangeJumpFrame();
   }
   
   get currentActionType() {
@@ -195,16 +228,20 @@ export default class Character {
     this._currentActionType = actionName;
   }
   
-  move() {}
   moveRight() {
-    this.currentActionType = 'MOVE_RIGHT';
-    this.flipbook = this.moveSettings.moveFlipbook;
-    this.moveSettings.moveFlipbook.start();
+    this.currentActionType = 'MOVE';
+    this._direction = 'RIGHT';
+    this.flipbook = this.moveSettings.moveRightFlipbook;
+    this.moveSettings.moveRightFlipbook.start();
   }
   moveLeft() {
-    this.currentActionType = 'MOVE_LEFT';
+    this.currentActionType = 'MOVE';
+    this._direction = 'LEFT';
+    this.flipbook = this.moveSettings.moveLeftFlipbook;
+    this.moveSettings.moveLeftFlipbook.start();
   }
   jump() {
+    if (this.currentActionType === 'JUMP') return;
     this.currentActionType = 'JUMP';
     this.flipbook = this.jumpSettings.jumpFlipbook;
     this.jumpSettings.jumpFlipbook.start();
@@ -221,6 +258,31 @@ export default class Character {
     this.currentActionType = 'ATTACK';
     this.flipbook = this.attackSettings.attackFlipbook;
     this.attackSettings.attackFlipbook.start();
+  }
+  
+  /**
+   * The main method for rendering a Character. Return current frame of a Character.
+   * You can call it any time you want to rerender your scene.
+   * Frame will change based on Flipbook settings which you have passed as a argument.
+   * @returns {Image | HTMLCanvasElement}
+   */
+  render() {
+    const offset = this._getOffset();
+    if (this.currentActionType === 'RUN') {
+      if (this._direction === 'RIGHT') {
+        this._changePosition(offset);
+      }
+      if (this._direction === 'LEFT') {
+        this._changePosition(-offset);
+      }
+    } else if (this.currentActionType === 'JUMP') {
+      if (this._prevActionType === 'RUN') {
+        if (this._direction === 'RIGHT') this._changePosition(offset);
+        if (this._direction === 'LEFT') this._changePosition(-offset);
+      }
+    }
+    this._lastRenderTime = Date.now();
+    return this.flipbook.currentSprite;
   }
   
   /**
@@ -282,5 +344,21 @@ export default class Character {
       this.position.y += dy;
       if (this._hooks.onMove instanceof Function) this._hooks.onMove();
     }
+  }
+  
+  _setOnChangeJumpFrame() {
+    const onChangeHandler = (frameNumber, frameCount) => {
+      if (frameNumber > 0 && frameNumber < 4) this.position.y -= 8;
+      if (frameNumber > 4 && frameNumber < 7) this.position.y += 8;
+      if (frameNumber === frameCount) {
+        this.actionType = this.#prevActionType;
+      }
+    }
+  }
+  
+  _getOffset() {
+    const timeChange = Date.now() - this._lastRenderTime;
+    const dt = timeChange / 1000.0;
+    return this.mainSettings.speed * dt;
   }
 }

@@ -1,10 +1,10 @@
-import Sprite from './Sprite';
+import Sprite from './Sprite.js';
 /**
  * Flipbook is used to animate multiple images (like GIFs)
  */
 export default class Flipbook {
   options = {
-    frameDuration: 300,
+    frameDuration: 100,
     mirror: false,
   };
   _spriteUrls = [];
@@ -27,9 +27,10 @@ export default class Flipbook {
     return instance;
   }
   
-  constructor(sprites, options) {
+  constructor(sprites, options = {}) {
     if (sprites == null || sprites.length < 1) throw new Error('Sprites are required!');
-    if (options && options.frameDuration) this.options = options;
+    if (options.frameDuration) this.options.frameDuration = options.frameDuration;
+    if (options.mirror) this.options.mirror = options.mirror;
     this._spriteUrls = sprites;
   }
   
@@ -53,15 +54,19 @@ export default class Flipbook {
   }
 
   start() {
-    this._timer = setInterval(() => {
-      this._currentSprite = this._sprites[this._currentSpriteIndex];
-      this._updateSize();
-      this._render();
-      const nextSpriteIndex = this._currentSpriteIndex + 1;
-      
-      if (nextSpriteIndex > this._sprites.length) this._currentSpriteIndex = 0;
-      else this._currentSpriteIndex = nextSpriteIndex;
-    }, this.options.frameDuration)
+    this._updateSize();
+    this._render();
+    if (this._sprites.length > 1) {
+      this._timer = setInterval(() => {
+        this._currentSprite = this._sprites[this._currentSpriteIndex];
+        this._updateSize();
+        this._render();
+        const nextSpriteIndex = this._currentSpriteIndex + 1;
+    
+        if (nextSpriteIndex >= this._sprites.length) this._currentSpriteIndex = 0;
+        else this._currentSpriteIndex = nextSpriteIndex;
+      }, this.options.frameDuration);
+    }
   }
   
   stop() {
@@ -105,6 +110,6 @@ export default class Flipbook {
       this.width * (isMirror ? -1 : 1),
       this.height,
     );
-    if (isMirror) this._renderer.setTransform(1, 0, 0, 1, 0, 0);
+    // if (isMirror) this._renderer.setTransform(1, 0, 0, 1, 0, 0);
   }
 }

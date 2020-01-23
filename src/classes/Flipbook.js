@@ -105,11 +105,11 @@ export default class Flipbook {
       0,
       this._currentSprite.width,
       this._currentSprite.height,
-      0,
+      // TODO it's hard code now. It should be passed through some options.
+      isMirror ? 40 : 0,
       0,
       this.width * (isMirror ? -1 : 1),
       this.height,
     );
-    // if (isMirror) this._renderer.setTransform(1, 0, 0, 1, 0, 0);
   }
 }

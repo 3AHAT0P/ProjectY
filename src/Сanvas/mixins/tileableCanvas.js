@@ -1,6 +1,6 @@
 import buildEvent from '../../utils/buildEvent.js';
-import CustomCanvas from '../СustomCanvas.js';
-import Point from '../../classes/Point.js';
+import CustomCanvas from '../index.js';
+import Point from '../../utils/classes/Point.js';
 
 const _onMouseMoveHandler = Symbol('_onMouseMoveHandler');
 const _onMouseOutHandler = Symbol('_onMouseOutHandler');
@@ -212,4 +212,4 @@ const TileableCanvasMixin = (BaseClass = CustomCanvas) => {
 
 export default TileableCanvasMixin;
 
-export const Tileable = TileableCanvasMixin();
+export const TileableCanvas = TileableCanvasMixin();

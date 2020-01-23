@@ -1,4 +1,4 @@
-import CustomCanvas from '../СustomCanvas.js';
+import CustomCanvas from '../index.js';
 
 const INCREASE_SIZE_MULTIPLIER = 2;
 const DECREASE_SIZE_MULTIPLIER = 1 / 2;
@@ -64,4 +64,4 @@ const ResizeableCanvasMixin = (BaseClass = CustomCanvas) => {
 
 export default ResizeableCanvasMixin;
 
-export const Resizeable = ResizeableCanvasMixin();
+export const ResizeableCanvas = ResizeableCanvasMixin();

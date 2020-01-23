@@ -1,14 +1,14 @@
-import { Tileable } from '../../src/canvases/mixins/tileable.js';
-import SelectableCanvasMixin from '../../src/canvases/mixins/selectable.js';
-import ResizeableCanvasMixin from '../../src/canvases/mixins/resizeable.js';
-import buildEvent from '../../src/utils/buildEvent.js';
-import Tile from '../../src/classes/Tile.js';
+import { TileableCanvas } from '../Сanvas/mixins/tileableCanvas.js';
+import SelectableCanvasMixin from '../Сanvas/mixins/selectableCanvas.js';
+import ResizeableCanvasMixin from '../Сanvas/mixins/resizeableCanvas.js';
+import buildEvent from '../utils/buildEvent.js';
+import Tile from '../utils/classes/Tile.js';
 
-export default class MainTileSet extends SelectableCanvasMixin(ResizeableCanvasMixin(Tileable)) {
-  _imageSrcLink = 'content/tilesets/mainTileSet.png';
+export default class TileSet extends SelectableCanvasMixin(ResizeableCanvasMixin(TileableCanvas)) {
+  _imageSrcLink = 'content/TileSet/mainTileSet.png';
   _imageSrc = null;
 
-  _metadataSrcLink = 'content/tilesets/main-tile-set.json';
+  _metadataSrcLink = 'content/TileSet/main-tile-set.json';
   _metadataSrc = null;
 
   _onMultiSelect({ from, to }) {
@@ -78,7 +78,7 @@ export default class MainTileSet extends SelectableCanvasMixin(ResizeableCanvasM
     await Promise.all(promises);
   }
 
-  //TODO need to check if it needed. We have such method in MainTileMap.js
+  //TODO need to check if it needed. We have such method in index.js
   async _loadMetadata() {
     this._metadataSrc = await (await fetch(this._metadataSrcLink)).json();
   }

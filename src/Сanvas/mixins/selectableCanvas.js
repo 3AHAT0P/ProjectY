@@ -1,5 +1,5 @@
 import buildEvent from '../../utils/buildEvent.js';
-import CustomCanvas from '../СustomCanvas.js';
+import CustomCanvas from '../index.js';
 
 const _onMouseDownHandler = Symbol('_onMouseDownHandler');
 const _onMouseUpHandler = Symbol('_onMouseUpHandler');
@@ -76,4 +76,4 @@ const SelectableCanvasMixin = (BaseClass = CustomCanvas) => {
 
 export default SelectableCanvasMixin;
 
-export const Selectable = SelectableCanvasMixin();
+export const SelectableCanvas = SelectableCanvasMixin();

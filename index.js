@@ -1,11 +1,11 @@
-import MainTileSet from './content/tilesets/MainTileSet.js';
-import MainTileMap from './content/tilemaps/MainTileMap.js';
-import CustomCanvas from './src/canvases/СustomCanvas.js';
-import ResizeableCanvasMixin from './src/canvases/mixins/resizeable.js';
-import TileableCanvasMixin from './src/canvases/mixins/tileable.js';
-import DrawableCanvasMixin from './src/canvases/mixins/drawable.js';
+import TileSet from './src/TileSet/index.js';
+import TileMap from './src/TileMap/index.js';
+import CustomCanvas from './src/Сanvas/index.js';
+import ResizeableCanvasMixin from './src/Сanvas/mixins/resizeableCanvas.js';
+import TileableCanvasMixin from './src/Сanvas/mixins/tileableCanvas.js';
+import DrawableCanvasMixin from './src/Сanvas/mixins/drawableCanvas.js';
 import drawImageFromMap from './src/utils/drawImageFromMap.js';
-import Character from './src/classes/Character.js';
+import Character from './src/utils/classes/Character.js';
 
 const MainCanvas = DrawableCanvasMixin(TileableCanvasMixin(ResizeableCanvasMixin(CustomCanvas)));
 
@@ -37,7 +37,7 @@ const main = async () => {
   const mainCanvas = await MainCanvas.create({ el: document.getElementById('main'), size: { width: 512, height: 512 } });
   const saveButton = createButton(document.body, 'Save', () => saveMap(mainCanvas));
   const currentTileCanvas = await CustomCanvas.create({ el: document.getElementById('current'), size: { width: 64, height: 64 } });
-  const mainTileSet = await MainTileSet.create({ el: document.getElementById('tileSet') });
+  const mainTileSet = await TileSet.create({ el: document.getElementById('tileSet') });
 
   mainTileSet.addEventListener(':multiSelect', ({ tiles }) => {
     mainCanvas.updateCurrentTiles(tiles);
@@ -50,7 +50,7 @@ const main = async () => {
     }
   });
 
-  const tileMap = await MainTileMap.create({ el: document.getElementById('tileMap'), size: { width: 512, height: 512 } });
+  const tileMap = await TileMap.create({ el: document.getElementById('tileMap'), size: { width: 512, height: 512 } });
 }
 
 // main();

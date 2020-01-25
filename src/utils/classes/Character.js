@@ -367,12 +367,15 @@ export default class Character {
   
   _setOnChangeJumpFrame() {
     const onChangeHandler = (frameNumber, frameCount) => {
-      if (frameNumber > 0 && frameNumber < 4) this.position.y -= 8;
-      if (frameNumber > 4 && frameNumber < 7) this.position.y += 8;
+      const middleFrameNumber = Math.ceil(frameCount / 2);
+      if (frameNumber > 1 && frameNumber < middleFrameNumber) this.position.y -= 8;
+      if (frameNumber > middleFrameNumber && frameNumber < frameCount) this.position.y += 8;
       if (frameNumber === frameCount) {
         this.actionType = this._prevActionType;
       }
-    }
+    };
+    this.jumpSettings.jumpLeftFlipbook.on('frameChange', onChangeHandler.bind(this));
+    this.jumpSettings.jumpRightFlipbook.on('frameChange', onChangeHandler.bind(this));
   }
   
   _getOffset() {

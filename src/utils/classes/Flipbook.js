@@ -1,4 +1,5 @@
 import Sprite from './Sprite.js';
+
 /**
  * Flipbook is used to animate multiple images (like GIFs)
  */
@@ -9,9 +10,13 @@ export default class Flipbook {
   };
   _spriteUrls = [];
   _sprites = [];
+  _eventHash = {
+    frameChange: [],
+  };
   _currentSprite = null;
   _currentSpriteIndex = 0;
   _timer = null;
+  _availableEvents = ['frameChange'];
 
   /**
    * @constructs The main method to create Flipbook.
@@ -61,6 +66,8 @@ export default class Flipbook {
         this._currentSprite = this._sprites[this._currentSpriteIndex];
         this._updateSize();
         this._render();
+        this._callEventHandlers('frameChange', [this._currentSpriteIndex + 1, this._sprites.length]);
+
         const nextSpriteIndex = this._currentSpriteIndex + 1;
     
         if (nextSpriteIndex >= this._sprites.length) this._currentSpriteIndex = 0;
@@ -75,6 +82,17 @@ export default class Flipbook {
     this._currentSprite = this._sprites[this._currentSpriteIndex];
   }
   
+  /**
+   * Standard way to add event handler
+   * @param event
+   * @param handler
+   */
+  on(event, handler) {
+    if (typeof event === 'string' && this._availableEvents.includes(event) && handler instanceof Function) {
+      this._eventHash[event].push(handler);
+    }
+  }
+
   get width() {
     return this._offscreenCanvas.width;
   }
@@ -111,5 +129,11 @@ export default class Flipbook {
       this.width * (isMirror ? -1 : 1),
       this.height,
     );
+  }
+  
+  _callEventHandlers(event, argumentsList) {
+    if (this._eventHash[event].length) {
+      this._eventHash[event].forEach(handler => handler(...argumentsList));
+    }
   }
 }

@@ -6,6 +6,7 @@ import TileableCanvasMixin from './src/Сanvas/mixins/tileableCanvas.js';
 import DrawableCanvasMixin from './src/Сanvas/mixins/drawableCanvas.js';
 import drawImageFromMap from './src/utils/drawImageFromMap.js';
 import Character from './src/utils/classes/Character.js';
+import Scene from './src/Scene';
 
 const MainCanvas = DrawableCanvasMixin(TileableCanvasMixin(ResizeableCanvasMixin(CustomCanvas)));
 
@@ -55,14 +56,14 @@ const main = async () => {
 
 // main();
 async function test() {
-  const canvas = document.createElement('canvas');
-  canvas.width = 500;
-  canvas.height = 500;
-  document.body.append(canvas);
-  const ctx = canvas.getContext('2d');
-  const player = await Character.create(
-      {
-        coreElement: canvas,
+  // const canvas = document.createElement('canvas');
+  // canvas.width = 500;
+  // canvas.height = 500;
+  // document.body.append(canvas);
+  // const ctx = canvas.getContext('2d');
+  const scene = new Scene(document.body);
+  const player = await Character.create({
+        coreElement: scene,
         position: { x: 0, y: 0 },
         mainSettings: {
           mainFlipbook: './content/sources/PNG/Knight/knight.png',
@@ -99,25 +100,27 @@ async function test() {
             './content/sources/PNG/Knight/Attack/attack4.png',
           ],
         },
-      }
-    );
-  const tick = () => {
-    // setTimeout(this.tick, 1000);
-    requestAnimationFrame(tick);
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(
-      player.render(),
-      0,
-      0,
-      player.width,
-      player.height,
-      0,
-      0,
-      player.width,
-      player.height,
-    );
-  };
-  tick();
+      });
+  
+  scene.addHero(player);
+  scene.start();
+//   const tick = () => {
+//     // setTimeout(this.tick, 1000);
+//     requestAnimationFrame(tick);
+//     ctx.clearRect(0, 0, canvas.width, canvas.height);
+//     ctx.drawImage(
+//       player.render(),
+//       0,
+//       0,
+//       player.width,
+//       player.height,
+//       0,
+//       0,
+//       player.width,
+//       player.height,
+//     );
+//   };
+//   tick();
 }
 
 test();

@@ -339,14 +339,21 @@ export default class Character {
   _initListeners() {
     window.addEventListener('keydown', this._keydownEventHandler.bind(this), { passive: true });
     window.addEventListener('keyup', this._keyupEventHandler.bind(this), { passive: true });
+    window.addEventListener('keypress', this._keypressEventHandler.bind(this), { passive: true });
   }
 
   _keydownEventHandler(event) {
+    if ([this.jumpSettings.jumpCode, this.jumpSettings.alternativeJumpCode].includes(event.code)) return;
     if (Object.keys(this._actionHandlerHash).includes(event.code)) this._actionHandlerHash[event.code](event);
   }
 
   _keyupEventHandler(event) {
+    if ([this.jumpSettings.jumpCode, this.jumpSettings.alternativeJumpCode].includes(event.code)) return;
     this.stop();
+  }
+
+  _keypressEventHandler(event) {
+    if ([this.jumpSettings.jumpCode, this.jumpSettings.alternativeJumpCode].includes(event.code)) this._actionHandlerHash[event.code](event);
   }
 
   get width() {
@@ -358,7 +365,7 @@ export default class Character {
   }
 
   _changePosition(dx = 0, dy = 0) {
-    if (this.mainSettings.checkPosition(this.position.x + dx, this.position.y + dy, this.width, this.height)) {
+    if (this._coreElement.checkPosition(this.position.x + dx, this.position.y + dy, this.width, this.height)) {
       this.position.x += dx;
       this.position.y += dy;
       if (this._hooks.onMove instanceof Function) this._hooks.onMove();
@@ -368,14 +375,18 @@ export default class Character {
   _setOnChangeJumpFrame() {
     const onChangeHandler = (frameNumber, frameCount) => {
       const middleFrameNumber = Math.ceil(frameCount / 2);
-      if (frameNumber > 1 && frameNumber < middleFrameNumber) this.position.y -= 8;
-      if (frameNumber > middleFrameNumber && frameNumber < frameCount) this.position.y += 8;
+      if (frameNumber > 1 && frameNumber < middleFrameNumber) this._changePosition(0, -8);
+      if (frameNumber > middleFrameNumber && frameNumber < frameCount) this._changePosition(0, 8);
       if (frameNumber === frameCount) {
         this.actionType = this._prevActionType;
       }
     };
-    this.jumpSettings.jumpLeftFlipbook.on('frameChange', onChangeHandler.bind(this));
-    this.jumpSettings.jumpRightFlipbook.on('frameChange', onChangeHandler.bind(this));
+    const catchEndJumping = (frameNumber, frameCount) => {
+      if (frameNumber === frameCount) this.stop();
+    };
+    this.jumpSettings.jumpLeftFlipbook.on('frameChange', onChangeHandler);
+    this.jumpSettings.jumpRightFlipbook.on('frameChange', onChangeHandler);
+    this.jumpSettings.jumpRightFlipbook.on('frameChange', catchEndJumping);
   }
   
   _getOffset() {

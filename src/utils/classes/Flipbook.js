@@ -59,6 +59,7 @@ export default class Flipbook {
   }
 
   start() {
+    this.stop();
     this._updateSize();
     this._render();
     if (this._sprites.length > 1) {

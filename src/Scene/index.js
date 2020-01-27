@@ -40,17 +40,28 @@ export default class Scene {
   pause() {
     this._paused = true;
   }
-
+  
+  checkPosition(x, y, width, height) {
+    if (x <= 0) return false;
+    if (x + width >= this._canvas.width) return false;
+    if (y < 0) return false;
+    return y + height < this._canvas.height;
+  }
+  
   _render() {
     if (this._paused) return;
 
-    requestAnimationFrame(this.start.bind(this));
+    requestAnimationFrame(this._render.bind(this));
     this._ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
     this._renderBackground();
+    this._renderObjects();
     this._renderHero();
   }
+
   _renderBackground() {}
   
+  _renderObjects() {}
+
   _renderHero() {
     const { position, width, height } = this._hero;
     this._ctx.drawImage(

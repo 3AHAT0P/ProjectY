@@ -229,45 +229,44 @@ export default class Character {
   }
   
   set currentActionType(actionName) {
-    if (actionName === 'JUMP' && this.currentActionType === 'MOVE') this._prevActionType = 'MOVE';
-    else this._prevActionType = null;
-
     if (this.currentActionType !== actionName) this._currentActionType = actionName;
     if (actionName === 'STOP') {
       if (this._hooks.onStop instanceof Function) this._hooks.onStop();
     }
-    // this._currentActionType = actionName;
   }
   
   moveRight() {
-    if (this.currentActionType === 'MOVE' && this._direction === 'RIGHT') return;
+    if (this._moving && this._direction === 'RIGHT') return;
     this.currentActionType = 'MOVE';
     this._direction = 'RIGHT';
+    this._moving = true;
     this.flipbook = this.moveSettings.moveRightFlipbook;
     this.flipbook.start();
   }
   moveLeft() {
-    if (this.currentActionType === 'MOVE' && this._direction === 'LEFT') return;
+    if (this._moving && this._direction === 'LEFT') return;
     this.currentActionType = 'MOVE';
     this._direction = 'LEFT';
+    this._moving = true;
     this.flipbook = this.moveSettings.moveLeftFlipbook;
     this.flipbook.start();
   }
   jump() {
-    if (this.currentActionType === 'JUMP') return;
+    if (this._jumping) return;
+    this._jumping = true;
     this.currentActionType = 'JUMP';
     this.flipbook = this._direction === 'RIGHT' ? this.jumpSettings.jumpRightFlipbook : this.jumpSettings.jumpLeftFlipbook;
     this.flipbook.start();
   }
   stop() {
-    if (this.currentActionType === 'JUMP' && this._prevActionType === 'MOVE') {
+    if (this._jumping) return;
+    if (!this._jumping && this._moving) {
       this._stopAllFlipbooks();
       if (this._direction === 'RIGHT') this.moveRight();
-      else this.moveLeft();
+      if (this._direction === 'LEFT') this.moveLeft();
     } else {
       this.currentActionType = 'STOP';
       this._stopAllFlipbooks();
-      // if (this.flipbook instanceof Flipbook) this.flipbook.stop();
       this.flipbook = this._direction === 'RIGHT' ? this.mainSettings.mainRightFlipbook : this.mainSettings.mainLeftFlipbook;
       if (this.flipbook instanceof Flipbook) this.flipbook.start();
     }
@@ -287,19 +286,9 @@ export default class Character {
    */
   render() {
     const offset = this._getOffset();
-    if (this.currentActionType === 'MOVE') {
-      if (this._direction === 'RIGHT') {
-        this._changePosition(offset);
-      }
-      if (this._direction === 'LEFT') {
-        this._changePosition(-offset);
-      }
-    } else if (this.currentActionType === 'JUMP') {
-      if (this._prevActionType === 'MOVE') {
-        if (this._direction === 'RIGHT') this._changePosition(offset);
-        if (this._direction === 'LEFT') this._changePosition(-offset);
-      }
-    }
+    if (this._moving && this._direction === 'RIGHT') this._changePosition(offset);
+    if (this._moving && this._direction === 'LEFT') this._changePosition(-offset);
+    
     this._lastRenderTime = Date.now();
     return this.flipbook.currentSprite;
   }
@@ -339,21 +328,23 @@ export default class Character {
   _initListeners() {
     window.addEventListener('keydown', this._keydownEventHandler.bind(this), { passive: true });
     window.addEventListener('keyup', this._keyupEventHandler.bind(this), { passive: true });
-    window.addEventListener('keypress', this._keypressEventHandler.bind(this), { passive: true });
   }
 
   _keydownEventHandler(event) {
-    if ([this.jumpSettings.jumpCode, this.jumpSettings.alternativeJumpCode].includes(event.code)) return;
     if (Object.keys(this._actionHandlerHash).includes(event.code)) this._actionHandlerHash[event.code](event);
   }
 
   _keyupEventHandler(event) {
     if ([this.jumpSettings.jumpCode, this.jumpSettings.alternativeJumpCode].includes(event.code)) return;
+    if ([
+      this.moveSettings.moveRightCode,
+      this.moveSettings.alternativeMoveRightCode,
+      this.moveSettings.moveLeftCode,
+      this.moveSettings.alternativeMoveLeftCode,
+    ].includes(event.code)) {
+      this._moving = false;
+    }
     this.stop();
-  }
-
-  _keypressEventHandler(event) {
-    if ([this.jumpSettings.jumpCode, this.jumpSettings.alternativeJumpCode].includes(event.code)) this._actionHandlerHash[event.code](event);
   }
 
   get width() {
@@ -382,9 +373,13 @@ export default class Character {
       }
     };
     const catchEndJumping = (frameNumber, frameCount) => {
-      if (frameNumber === frameCount) this.stop();
+      if (frameNumber === frameCount) {
+        this._jumping = false;
+        this.stop();
+      }
     };
     this.jumpSettings.jumpLeftFlipbook.on('frameChange', onChangeHandler);
+    this.jumpSettings.jumpLeftFlipbook.on('frameChange', catchEndJumping);
     this.jumpSettings.jumpRightFlipbook.on('frameChange', onChangeHandler);
     this.jumpSettings.jumpRightFlipbook.on('frameChange', catchEndJumping);
   }
@@ -396,6 +391,8 @@ export default class Character {
   }
   
   _stopAllFlipbooks() {
+    this._jumping = false;
+    this._moving = false;
     this.mainSettings.mainLeftFlipbook.stop();
     this.mainSettings.mainRightFlipbook.stop();
     this.jumpSettings.jumpRightFlipbook.stop();

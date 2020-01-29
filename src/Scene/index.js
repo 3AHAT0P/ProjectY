@@ -59,7 +59,26 @@ export default class Scene {
     if (y < 0) return false;
     return y + height < this._canvas.height;
   }
-  
+
+  /**
+   * If object has collision with any static object returns true.
+   * @param {Character} object
+   * @returns {boolean}
+   */
+  checkMoveCollisions(object) {
+    return this._staticObjects.some(obj => this._detectCollision(object, obj))
+  }
+
+  /**
+   * If object has collision with any dynamic object returns true.
+   * It means that object receives a damage.
+   * @param {Character} object
+   * @returns {boolean}
+   */
+  checkDamageCollisions(object) {
+    return this._dynamicObjects.some(obj => this._detectCollision(object, obj))
+  }
+
   _render() {
     if (this._paused) return;
 
@@ -72,12 +91,19 @@ export default class Scene {
 
   _renderBackground() {}
   
-  _renderObjects() {}
+  _renderObjects() {
+    this._staticObjects.forEach(staticObject => this._renderObject(staticObject));
+    this._dynamicObjects.forEach(dynamicObject => this._renderObject(dynamicObject));
+  }
 
   _renderHero() {
-    const { position, width, height } = this._hero;
+    this._renderObject(this._hero);
+  }
+  
+  _renderObject(object) {
+    const { position, width, height } = object;
     this._ctx.drawImage(
-      this._hero.render(),
+      object.render(),
       0,
       0,
       width,
@@ -89,14 +115,6 @@ export default class Scene {
     );
   }
 
-  checkMoveCollisions(object) {
-    return this._staticObjects.some(obj => this._detectCollision(object, obj))
-  }
-  
-  checkDamageCollisions(object) {
-    return this._dynamicObjects.some(obj => this._detectCollision(object, obj))
-  }
-  
   _detectCollision(a, b) {
     const ax2 = a.position.x + a.width;
     const ay2 = a.position.y + a.height;

@@ -370,8 +370,8 @@ export default class Character {
 
   _changePosition(dx = 0, dy = 0) {
     const isWithin = this._coreElement.checkBeyondPosition(this.position.x + dx, this.position.y + dy, this.width, this.height);
-    const canMove = this._coreElement.checkMoveCollisions(this);
-    if (isWithin && canMove) {
+    const hasMoveCollisions = this._coreElement.checkMoveCollisions(this);
+    if (isWithin && !hasMoveCollisions) {
       this.position.x += dx;
       this.position.y += dy;
       if (this._hooks.onMove instanceof Function) this._hooks.onMove();

@@ -12,6 +12,7 @@ export default class Character {
   _hooks = {
     onStop: null,
     onMove: null,
+    onDamage: null,
   };
   
   flipbook = null;
@@ -57,7 +58,7 @@ export default class Character {
   
   /**
    * @constructs The main method to create a character
-   * @param {HTMLCanvasElement} coreElement - canvas on which Character will be rendered
+   * @param {Scene} coreElement - canvas on which Character will be rendered
    * @param {Object} position - initial Character position
    * @param {number} position.x - canvas coordinates
    * @param {number} position.y - canvas coordinates
@@ -130,7 +131,7 @@ export default class Character {
   }
   
   /**
-   * @param {HTMLCanvasElement} coreElement - canvas on which Character will be rendered
+   * @param {Scene} coreElement - canvas on which Character will be rendered
    * @param {Object} position - initial Character position
    * @param {number} position.x - canvas coordinates
    * @param {number} position.y - canvas coordinates
@@ -301,6 +302,18 @@ export default class Character {
     window.removeEventListener('keyup', this._keyupEventHandler);
   }
   
+  /**
+   * This method is used to add hooks for a character.
+   * Available hooks - onMove, onStop, onDamage
+   * @param hook
+   * @param handler
+   */
+  on(hook, handler) {
+    const isValidHook = ['onMove', 'onStop', 'onDamage'].includes(hook);
+    const isValidHandler = handler instanceof Function;
+    if (isValidHook && isValidHandler) this._hooks[hook] = handler;
+  }
+  
   _validateFlipbooks(mainFlipbook, moveFlipbook, jumpFlipbook, attackFlipbook) {
     const isMainFlipbookValid = mainFlipbook != null && (mainFlipbook instanceof Sprite || mainFlipbook instanceof Flipbook);
     const isMoveFlipbookValid = moveFlipbook != null && moveFlipbook instanceof Flipbook;
@@ -356,10 +369,16 @@ export default class Character {
   }
 
   _changePosition(dx = 0, dy = 0) {
-    if (this._coreElement.checkPosition(this.position.x + dx, this.position.y + dy, this.width, this.height)) {
+    const isWithin = this._coreElement.checkBeyondPosition(this.position.x + dx, this.position.y + dy, this.width, this.height);
+    const canMove = this._coreElement.checkMoveCollisions(this);
+    if (isWithin && canMove) {
       this.position.x += dx;
       this.position.y += dy;
       if (this._hooks.onMove instanceof Function) this._hooks.onMove();
+    }
+    const isDamageReceived = this._coreElement.checkDamageCollisions(this);
+    if (isDamageReceived) {
+      if (this._hooks.onDamage instanceof Function) this._hooks.onDamage();
     }
   }
   

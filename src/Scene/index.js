@@ -6,6 +6,8 @@ import { Character } from '../utils/classes';
 export default class Scene {
   // _hero = null;
   // _ctx = null;
+  _staticObjects = [];
+  _dynamicObjects = [];
 
   /**
    * @constructor Scene
@@ -31,6 +33,16 @@ export default class Scene {
     }
     else throw new Error('Hero should be an instance of the Character class.')
   }
+  
+  /**
+   *
+   * @param object
+   * @param {string} type - dynamic or static
+   */
+  addObject(object, type) {
+    if (object && type === 'static') this._staticObjects.push(object);
+    if (object && type === 'dynamic') this._dynamicObjects.push(object);
+  }
 
   start() {
     this._paused = false;
@@ -41,7 +53,7 @@ export default class Scene {
     this._paused = true;
   }
   
-  checkPosition(x, y, width, height) {
+  checkBeyondPosition(x, y, width, height) {
     if (x <= 0) return false;
     if (x + width >= this._canvas.width) return false;
     if (y < 0) return false;
@@ -75,5 +87,22 @@ export default class Scene {
       width,
       height,
     );
+  }
+
+  checkMoveCollisions(object) {
+    return this._staticObjects.some(obj => this._detectCollision(object, obj))
+  }
+  
+  checkDamageCollisions(object) {
+    return this._dynamicObjects.some(obj => this._detectCollision(object, obj))
+  }
+  
+  _detectCollision(a, b) {
+    const ax2 = a.position.x + a.width;
+    const ay2 = a.position.y + a.height;
+    const bx2 = b.position.x + b.width;
+    const by2 = b.position.y + b.height;
+    
+    return !(ax2 < b.x || a.x > bx2 || ay2 < b.y || a.y > by2);
   }
 }
